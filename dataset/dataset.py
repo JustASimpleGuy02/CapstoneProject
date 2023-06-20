@@ -6,13 +6,13 @@ import json
 
 class PolyvoreDataset(Dataset):
     
-    def __init__(self, data_dir, transform) -> None:
+    def __init__(self, data_dir, transform = None) -> None:
         """
-        Init the dataset
+        Initialize the dataset
 
         Args:
-            data_dir (_type_): _description_
-            transform (_type_): _description_
+            data_dir (str): path to polyvore_outfits folder
+            transform (transform): the transform apply to image
         """
         path2images = os.path.join(data_dir, "images")
         
