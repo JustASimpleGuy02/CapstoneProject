@@ -8,7 +8,7 @@ import re
 
 class PolyvoreDataset(Dataset):
     
-    def __init__(self, data_dir, transform = None) -> None:
+    def __init__(self, data_dir, transform = None, filter_description = True) -> None:
         """
         Initialize the dataset
 
@@ -27,19 +27,27 @@ class PolyvoreDataset(Dataset):
         
         self.metadatas = json.load(open(path2metadata, 'r', encoding='UTF-8'))
         
+        self.filter_description = filter_description
+        
         self.clean_dataset()
         
         self.transform = transform
         
     def clean_dataset(self):
         """
-        Remove item without metadata
+        Cleaning the dataset:
+            - Remove item without metadata
+            - If filter_description, remove item without description in metadata
         """
         result = []
         for image_fullname in self.full_filenames:
             image_name = os.path.basename(image_fullname)
             item_id = os.path.splitext(image_name)[0]
             if item_id in self.metadatas:
+                if self.filter_description:
+                    description = self.metadatas[item_id]["description"]
+                    if len(description) == 0:
+                        continue
                 result.append(image_fullname)
         self.full_filenames = result
     
@@ -53,28 +61,32 @@ class PolyvoreDataset(Dataset):
         Returns:
             str: the processed metadata
         """
-        url_name = metadata.get("url_name", "untitled").lower()
-        if url_name == "untitled":
-            url_name = ""
+        if self.filter_description:
+            description = metadata.get("description", "").lower()
+            processed_metadata = description
+        else:
+            url_name = metadata.get("url_name", "untitled").lower()
+            if url_name == "untitled":
+                url_name = ""
+                
+            description = metadata.get("description", "").lower()
             
-        description = metadata.get("description", "").lower()
-        
-        categories = metadata.get("catgeories", "")
-        if type(categories) == list:
-            categories = " ".join(categories).lower()
-        
-        title = metadata.get("title", "untitled").lower()
-        if title == "untitled":
-            title = ""
-        
-        related = metadata.get("related", "")
-        if type(related) == list:
-            related = " ".join(related).lower()
+            categories = metadata.get("catgeories", "")
+            if type(categories) == list:
+                categories = " ".join(categories).lower()
             
-        semantic_category = metadata.get("semantic_category", "").lower()
-        
-        processed_metadata = url_name + " " + description + " " + \
-            categories + " " + title + " " + related + " " + semantic_category
+            title = metadata.get("title", "untitled").lower()
+            if title == "untitled":
+                title = ""
+            
+            related = metadata.get("related", "")
+            if type(related) == list:
+                related = " ".join(related).lower()
+                
+            semantic_category = metadata.get("semantic_category", "").lower()
+            
+            processed_metadata = url_name + " " + description + " " + \
+                categories + " " + title + " " + related + " " + semantic_category
         
         processed_metadata = process_text.remove_punctuation(processed_metadata)
         
