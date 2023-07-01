@@ -4,7 +4,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 import json
 import dataset.process_text as process_text
-import re
+import pickle
 
 class PolyvoreDataset(Dataset):
     
@@ -14,7 +14,7 @@ class PolyvoreDataset(Dataset):
 
         Args:
             data_dir (str): path to polyvore_outfits folder
-            transform (transform): the transform apply to image
+            transform (transform): the transform apply to image. Default to None
         """
         path2images = os.path.join(data_dir, "images")
         
@@ -118,4 +118,50 @@ class PolyvoreDataset(Dataset):
         item_id = os.path.splitext(image_name)[0]
         item_metadata = self.process_metadata(self.metadatas[item_id])
         
-        return image, item_metadata, item_id
+        return image, item_metadata, image_name
+
+class PolyvoreFashionHashDataset(Dataset):
+    
+    def __init__(self, data_dir, transform = None) -> None:
+        """
+        Initialize the dataset
+
+        Args:
+            data_dir (str): path to polyvore_outfits folder
+            transform (transform): the transform apply to image. Default to None
+        """
+        path2images = os.path.join(data_dir, "images", "291x291")
+        
+        filenames = os.listdir(path2images)
+        
+        self.full_filenames = [os.path.join(path2images, filename)
+                              for filename in filenames]
+        
+        path2vector = os.path.join(data_dir, "sentence_vector", "semantic.pkl")
+        
+        path2metadata = os.path.join(data_dir, "fashion_items.pickle")
+        
+        with open(path2vector, 'rb') as f:
+            self.vector_dict = pickle.load(f)
+        
+        with open(path2metadata, 'rb') as f:
+            self.metadata_dict = pickle.load(f)
+    
+        self.transform = transform
+    
+    def __len__(self):
+        """
+        Return len of dataset
+        """
+        return len(self.full_filenames)
+    
+    def __getitem__(self, index):
+        image_fullname = self.full_filenames[index]
+        image = Image.open(image_fullname)
+        if self.transform is not None:
+            image = self.transform(image)
+        image_name = os.path.basename(image_fullname)
+        semantic_vector = self.vector_dict[image_name]
+        item_metadata = self.metadata_dict[image_name]
+        
+        return image, semantic_vector, item_metadata, image_name
