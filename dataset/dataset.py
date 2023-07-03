@@ -56,7 +56,7 @@ class PolyvoreDataset(Dataset):
         Preprocess the metadata
 
         Args:
-            metadata (str): the metadata of the item
+            metadata (dict): the metadata of the item
 
         Returns:
             str: the processed metadata
@@ -146,8 +146,44 @@ class PolyvoreFashionHashDataset(Dataset):
         
         with open(path2metadata, 'rb') as f:
             self.metadata_dict = pickle.load(f)
-    
+
+        self.clean_dataset()
+        
         self.transform = transform
+    
+    def clean_dataset(self):
+        """
+        Cleaning the dataset:
+            - Remove item without description
+        """
+        result = []
+        for full_filename in self.full_filenames:
+            image_name = os.path.basename(full_filename)
+            text = self.metadata_dict[image_name].get("text", "")
+            if len(text) == 0 or text == "null":
+                continue
+                
+            result.append(full_filename)
+        self.full_filenames = result
+    
+    def process_metadata(self, metadata: dict):
+        """
+        Preprocess the metadata
+
+        Args:
+            metadata (dict): the metadata of the item
+        
+        Returns:
+            str: the processed metadata
+        """
+        description = metadata.get("text", "").lower()
+        processed_metadata = description
+        
+        processed_metadata = process_text.remove_punctuation(processed_metadata)
+        
+        processed_metadata = process_text.remove_unwant_spaces(processed_metadata)
+        
+        return processed_metadata
     
     def __len__(self):
         """
@@ -162,6 +198,6 @@ class PolyvoreFashionHashDataset(Dataset):
             image = self.transform(image)
         image_name = os.path.basename(image_fullname)
         semantic_vector = self.vector_dict[image_name]
-        item_metadata = self.metadata_dict[image_name]
+        item_metadata = self.process_metadata(self.metadata_dict[image_name])
         
         return image, semantic_vector, item_metadata, image_name
