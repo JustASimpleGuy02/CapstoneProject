@@ -1,5 +1,12 @@
 # RECOMMENDER SYSTEM USING FASHION CLIP
 
+## Setup
+```
+$ conda create -n fclip python=3.8
+$ conda activate fclip
+$ pip install -r requirements.txt
+```
+
 ## Data preparation
 
 ### Original Polyvore
