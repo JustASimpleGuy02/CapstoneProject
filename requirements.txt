@@ -1,0 +1,5 @@
+matplotlib
+ipykernel
+tqdm
+fashion-clip
+opencv-python 
