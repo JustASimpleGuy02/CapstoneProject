@@ -18,6 +18,12 @@ Extract the data to folder `polyvore`, place it in folder `data`
 
 Extract the `291x291.tag.gz` file in `image` folder
 
+### CSV files
+
+Create a folder `csv_files`, place it in folder `data`
+
+Download files from: [Here](https://drive.google.com/drive/folders/1EVNyUIoszvw4tNUrVsLgJ78FpHSNtZe_?usp=sharing)
+
 ## Colab
 
-<https://colab.research.google.com/drive/13QyNX2XlQkaO42m7yktEaXr9fZKKlYHB?authuser=2#scrollTo=oACMlxLku3uE>
+Get a copy from: [Here](https://colab.research.google.com/drive/13QyNX2XlQkaO42m7yktEaXr9fZKKlYHB?authuser=2#scrollTo=oACMlxLku3uE)
