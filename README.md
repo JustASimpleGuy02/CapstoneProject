@@ -32,6 +32,14 @@ Create a folder `csv_files`, place it in folder `data`
 
 Download files from: [Here](https://drive.google.com/drive/folders/1EVNyUIoszvw4tNUrVsLgJ78FpHSNtZe_?usp=sharing)
 
+### Demo files
+
+Create a folder `demo`, place it in folder `data`
+
+Download files from: [Here](https://drive.google.com/drive/folders/1EVNyUIoszvw4tNUrVsLgJ78FpHSNtZe_?usp=sharing)
+
+Notes: the path in paths.txt is config for Windows, so please run the app in Windows.
+
 ## Colab
 
 Get a copy from: [Here](https://colab.research.google.com/drive/13QyNX2XlQkaO42m7yktEaXr9fZKKlYHB?authuser=2#scrollTo=oACMlxLku3uE)
