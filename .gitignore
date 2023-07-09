@@ -1,4 +1,4 @@
 data/*
-App/*
+# App/*
 user_items/*
 *.pyc
