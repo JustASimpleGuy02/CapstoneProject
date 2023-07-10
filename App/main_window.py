@@ -8,6 +8,7 @@ import numpy as np
 import cv2
 
 IMAGE_FOLDER = os.path.join(__file__, "..", "images")
+QSS_FOLDER = os.path.join(__file__, "..", "qss_files")
 
 def rescale_image(image):
     h, w = image.shape[:2]
@@ -45,21 +46,30 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Demo App")
         
         self.main_frame = QFrame()
-        self.main_layout = QVBoxLayout()
+        self.main_layout = QHBoxLayout()
+        self.function_layout = QVBoxLayout()
         
-        # Tool bar
-        self.tool_bar = QToolBar()
-        self.addToolBar(self.tool_bar)
+        # Side bar
+        self.side_bar = QFrame()
+        self.side_bar.setStyleSheet(open(os.path.join(QSS_FOLDER, 'side_bar.qss')).read())
+        self.side_bar_layout = QVBoxLayout()
+        # self.side_bar_layout.setSpacing(0)
+        self.side_bar_layout.setContentsMargins(5, 5, 5, 0)
+        self.side_bar_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         
-        self.action_search = QAction("Search")
-        self.action_viewItem = QAction("View Items")
+        self.search_tab_button = QPushButton()
+        self.search_tab_button.setFixedSize(QSize(50, 50))
+        self.search_tab_button.setIcon(QIcon(os.path.join(IMAGE_FOLDER, "search_tab.png")))
+        self.search_tab_button.setStyleSheet(open(os.path.join(QSS_FOLDER, 'button.qss')).read())
         
-        self.action_search.setCheckable(True)
-        self.action_viewItem.setCheckable(True)
-        self.action_search.setChecked(True)
+        self.view_tab_button = QPushButton()
+        self.view_tab_button.setFixedSize(QSize(50, 50))
+        self.view_tab_button.setIcon(QIcon(os.path.join(IMAGE_FOLDER, "view_tab.png")))
+        self.view_tab_button.setStyleSheet(open(os.path.join(QSS_FOLDER, 'button.qss')).read())
         
-        self.tool_bar.addAction(self.action_search)
-        self.tool_bar.addAction(self.action_viewItem)
+        self.side_bar_layout.addWidget(self.search_tab_button, 0, Qt.AlignmentFlag.AlignTop)
+        self.side_bar_layout.addWidget(self.view_tab_button, 0, Qt.AlignmentFlag.AlignTop)
+        self.side_bar.setLayout(self.side_bar_layout)
         
         # Search frame
         self.search_frame = QFrame()
@@ -68,67 +78,58 @@ class MainWindow(QMainWindow):
         self.search_box = QLineEdit()
         self.search_box.setPlaceholderText("Enter prompt...")
         font = QFont()
-        font.setPointSize(25)
+        font.setPointSize(18)
         font.setBold(True)
         self.search_box.setFont(font)
         self.search_box.setMinimumHeight(50)
-        # self.search_box.setStyleSheet("border-radius: 10px;")
+        self.search_box.setStyleSheet(open(os.path.join(QSS_FOLDER, 'search_box.qss')).read())
         
         self.search_button = QPushButton()
         self.search_button.setFixedSize(QSize(50, 50))
-        # self.search_button.setText("Search")
         self.search_button.setIcon(QIcon(os.path.join(IMAGE_FOLDER, "magnifying_glass.png")))
+        self.search_button.setStyleSheet(open(os.path.join(QSS_FOLDER, 'button.qss')).read())
+        
+        self.clear_output_button = QPushButton()
+        self.clear_output_button.setFixedSize(QSize(50, 50))
+        self.clear_output_button.setIcon(QIcon(os.path.join(IMAGE_FOLDER, "clear.png")))
+        self.clear_output_button.setStyleSheet(open(os.path.join(QSS_FOLDER, 'button.qss')).read())
         
         self.search_layout.addWidget(self.search_box)
         self.search_layout.addWidget(self.search_button)
+        self.search_layout.addWidget(self.clear_output_button)
         self.search_frame.setLayout(self.search_layout)
-        
-        # Button frame
-        self.button_frame = QFrame()
-        self.button_layout = QHBoxLayout()
-        
-        self.clear_output_button = QPushButton()
-        self.clear_output_button.setText("Clear output")
-        
-        self.add_item_button = QPushButton()
-        self.add_item_button.setText("Add item")
-        
-        self.button_layout.addWidget(self.clear_output_button)
-        self.button_layout.addWidget(self.add_item_button)
-        self.button_frame.setLayout(self.button_layout)
         
         # Result frame
         self.result_frame = QFrame()
         self.result_frame.setMinimumSize(700, 700)
         self.result_layout = QStackedLayout()
         
-        self.loading_screen = QLabel()
-        self.loading_screen.setPixmap(QPixmap())
-        self.loading_screen.setText("<b>Empty</b>")
-        self.loading_screen.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
         self.result_screen = QLabel()
-        
-        self.result_layout.addWidget(self.loading_screen)
+        self.result_screen.setFont(font)
+        self.result_screen.setPixmap(QPixmap())
+        self.result_screen.setText("<b>Empty</b>")
+        self.result_screen.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                
+        self.result_layout.addWidget(self.result_screen)
         self.result_frame.setLayout(self.result_layout)
         
-        self.main_layout.addWidget(self.search_frame)
-        self.main_layout.addWidget(self.button_frame)
-        self.main_layout.addWidget(self.result_frame)
+        self.function_layout.addWidget(self.search_frame)
+        self.function_layout.addWidget(self.result_frame)
+        self.main_layout.addWidget(self.side_bar)
+        self.main_layout.addLayout(self.function_layout)
         self.main_frame.setLayout(self.main_layout)
         self.setCentralWidget(self.main_frame)
         
         self.search_button.clicked.connect(self.search_function)
         self.clear_output_button.clicked.connect(self.clear_output_function)
-        self.add_item_button.clicked.connect(self.add_item_function)
     
     def search_function(self):
         input_prompt = self.search_box.text()
         
         if len(input_prompt) == 0:
-            self.loading_screen.setText("<b>Input prompt empty!</b>")
+            self.result_screen.setText("<b>Input prompt empty!</b>")
         else:
-            self.loading_screen.setText("<b>Searching...</b>")
+            self.result_screen.setText("<b>Searching...</b>")
             # print(input_prompt)
         
             self.threadpool.start(Worker(search_controller.search, 
@@ -137,15 +138,15 @@ class MainWindow(QMainWindow):
                                          n_sample = -1))
             
     def showing_result(self, image):
-        self.loading_screen.setText("")
+        self.result_screen.setText("")
         
         image = rescale_image(image)
         
-        self.loading_screen.setPixmap(numpy_to_qpixmap(image))
+        self.result_screen.setPixmap(numpy_to_qpixmap(image))
     
     def clear_output_function(self):
-        self.loading_screen.setPixmap(QPixmap())
-        self.loading_screen.setText("<b>Empty</b>")
+        self.result_screen.setPixmap(QPixmap())
+        self.result_screen.setText("<b>Empty</b>")
     
     def add_item_function(self):
         pass
