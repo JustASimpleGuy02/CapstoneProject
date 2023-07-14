@@ -3,3 +3,4 @@ ipykernel
 tqdm
 fashion-clip
 opencv-python 
+snoop

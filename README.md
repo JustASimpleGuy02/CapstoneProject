@@ -4,6 +4,7 @@
 ```
 $ conda create -n fclip python=3.8
 $ conda activate fclip
+$ conda install pytorch==1.13.1 torchvision==0.14.1 pytorch-cuda=11.7 -c pytorch -c nvidia
 $ pip install -r requirements.txt
 ```
 

@@ -6,6 +6,7 @@ from fashion_clip.fashion_clip import FashionCLIP
 import numpy as np
 import cv2
 from PIL import Image
+import snoop
 
 fclip = FashionCLIP('fashion-clip')
 
@@ -25,10 +26,11 @@ def load_image(path_to_image: str, backend: str = 'cv2', toRGB: bool = True) -> 
 
     return image
 
+@snoop
 def search(prompt: str,
            image_dir: str,
            image_embeddings: List[np.ndarray] = None,
-           n_sample: int = -1):
+           n_sample: int = None):
     """_summary_
 
     Args:
@@ -43,7 +45,10 @@ def search(prompt: str,
     """
     image_paths = sorted(glob(osp.join(image_dir, "*.jpg")))
     text_embedding = fclip.encode_text([prompt], 32)[0]
-
+    
+    if n_sample is None or n_sample > len(image_paths):
+        n_sample = len(image_paths)
+            
     if image_embeddings is None:
         image_embeddings = fclip.encode_images(image_paths[:n_sample], batch_size=32)
 
@@ -56,5 +61,7 @@ def search(prompt: str,
 
 if __name__ == "__main__":
     image_dir = "fashion-items-dataset"
-    image, image_embeddings = search("black shirt", image_dir, n_sample=200)
+    image, image_embeddings = search("black shirt", image_dir)
     image, _ = search("brown shorts", image_dir=image_dir, image_embeddings=image_embeddings)
+    cv2.imshow("Found Image", image)
+    cv2.waitKey(0)
