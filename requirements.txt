@@ -4,3 +4,5 @@ tqdm
 fashion-clip
 opencv-python 
 snoop
+scikit-learn
+transformers
