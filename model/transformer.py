@@ -21,7 +21,7 @@ class PositionalEmbedding(nn.Module):
                  max_len: int,
                  d_model: int) -> None:
         super().__init__()
-        self.p_drop = nn.p_drop(p_drop)
+        self.dropout = nn.Dropout(p_drop)
         self.src_embed = nn.Embedding(max_len, d_model)
         pe = torch.zeros(max_len, d_model)
         pos = torch.arange(0, max_len).unsqueeze(1)
@@ -34,43 +34,63 @@ class PositionalEmbedding(nn.Module):
         
     def forward(self, x: torch.Tensor):
         x = self.src_embed(x) + nn.Parameter(self.pe, requires_grad=False)     
-        return self.p_drop(x)
+        return self.dropout(x)
     
 
-class Attention(nn.Module):
-    """Implementation of Scaled Dot-Product Attention module."""
-    def __init__(self, 
-                 d_input: int, 
-                 d_k: int,
-                 ) -> None:
-        super().__init__()
-        self.d_k = d_k
-        self.qkv_nets = get_clones(nn.Linear(d_input, d_k), 3)
+# class Attention(nn.Module):
+#     """Implementation of Scaled Dot-Product Attention module."""
+#     def __init__(self, 
+#                  d_model: int, 
+#                  d_k: int,
+#                  ) -> None:
+#         super().__init__()
+#         self.d_k = d_k
+#         self.qkv_nets = get_clones(nn.Linear(d_model, d_k), 3)
         
-    def forward(self, 
-                query: torch.Tensor, 
-                key: torch.Tensor, 
-                value: torch.Tensor
-                ):
-        """
-        Args:
-            query (torch.Tensor): query tensor, shape (B, max_len, d_k)
-            key (torch.Tensor): key tensor, shape (B, max_len, d_k)
-            value (torch.Tensor): value tensor, shape (B, max_len, d_k)
+#     def forward(self, 
+#                 query: torch.Tensor, 
+#                 key: torch.Tensor, 
+#                 value: torch.Tensor
+#                 ):
+#         """
+#         Args:
+#             query (torch.Tensor): query tensor, shape (B, max_len, d_k)
+#             key (torch.Tensor): key tensor, shape (B, max_len, d_k)
+#             value (torch.Tensor): value tensor, shape (B, max_len, d_k)
 
-        Returns:
-            torch.Tensor: output tensor, shape (B, max_len, d_k)
-        """
-        query, key, value = [net(x) for net, x in zip(self.qkv_nets, (query, key, value))]
-        scaled_dot = torch.matmul(query, key.transpose(-2, -1)).divide(math.sqrt(self.d_k))
-        out = F.softmax(scaled_dot, dim=-1)
-        out = torch.matmul(out, value)
-        return out
+#         Returns:
+#             torch.Tensor: output tensor, shape (B, max_len, d_k)
+#         """
+#         query, key, value = [net(x) for net, x in zip(self.qkv_nets, (query, key, value))]
+#         scaled_dot = torch.matmul(query, key.transpose(-2, -1)).divide(math.sqrt(self.d_k))
+#         out = F.softmax(scaled_dot, dim=-1)
+#         out = torch.matmul(out, value)
+#         return out
+
+def attention(
+    query: torch.Tensor, 
+    key: torch.Tensor, 
+    value: torch.Tensor
+    ):
+    """Perform Scaled Dot-Product Attention Function
+    
+    Args:
+        d_k: dimension of projected vectors
+        query (torch.Tensor): query tensor, shape (B, max_len, n_heads*d_k)
+        key (torch.Tensor): key tensor, shape (B, max_len, n_heads*d_k)
+        value (torch.Tensor): value tensor, shape (B, max_len, n_heads*d_k)
+
+    Returns:
+        torch.Tensor: output tensor, shape (B, max_len, n_heads*d_k)
+    """
+    d_k  = query.size(-1)
+    scaled_dot = torch.matmul(query, key.transpose(-2, -1)) / (math.sqrt(d_k))
+    p_attn = F.softmax(scaled_dot, dim=-1)
+    return torch.matmul(p_attn, value), p_attn
 
 
 class MultiHeadAttention(nn.Module):
     def __init__(self, 
-                 d_input: int,
                  d_model: int,
                  d_k: int, 
                  d_v: int,
@@ -81,9 +101,8 @@ class MultiHeadAttention(nn.Module):
         self.d_k = d_k
         self.d_v = d_v
         self.n_heads = n_heads
-        self.attn_heads = get_clones(Attention(d_input, d_k), n_heads)
-        self.fc = nn.Linear(n_heads * d_v, d_model)
-        self.p_drop = nn.p_drop(p_drop)
+        self.linears = get_clones(nn.Linear(d_model, n_heads*d_k), 4)
+        self.dropout = nn.Dropout(p_drop)
         
     def forward(self, 
                 query: torch.Tensor, 
@@ -92,21 +111,25 @@ class MultiHeadAttention(nn.Module):
                 ):
         """
         Args:
-            query (torch.Tensor): query tensor, shape (B, max_len, d_k)
-            key (torch.Tensor): key tensor, shape (B, max_len, d_k)
-            value (torch.Tensor): value tensor, shape (B, max_len, d_k)
+            query (torch.Tensor): query tensor, shape (B, max_len, d_model)
+            key (torch.Tensor): key tensor, shape (B, max_len, d_model)
+            value (torch.Tensor): value tensor, shape (B, max_len, d_model)
 
         Returns:
-            torch.Tensor: output tensor, shape (B, max_len, d_k)
+            torch.Tensor: output tensor, shape (B, max_len, d_model)
         """
-        n_batch = x.size(0)
+        n_batches = x.size(0)
         
-        # Apply multi-attention heads to query, key, and value tensor
-        x = [head(query, key, value) for head in self.attn_heads]
+        # Linearly project query, key, and value to different heads
+        query, key, value = [net(x).view(n_batches, -1, self.n_heads, self.d_k) 
+                             for net, x in zip(self.linears[:-1], (query, key, value))]
         
-        # Concat all the output
-        x = torch.stack(x)
-        x = self.fc(x.view(n_batch, -1, self.n_heads * self.d_k))
+        # Perform attention function in parallel
+        x, self.attn = attention(query, key, value)
+        
+        # Project the final time
+        x = self.fc(x.view(n_batches, -1, self.n_heads * self.d_k))
+        
         return x
 
 class LayerNorm(nn.Module):
