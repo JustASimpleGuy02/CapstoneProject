@@ -1,5 +1,6 @@
 """
-    Inspired by Aleksa Gordic's implementation at https://github.com/gordicaleksa/pytorch-original-transformer
+    Inspired by https://github.com/gordicaleksa/pytorch-original-transformer 
+    and https://nlp.seas.harvard.edu/2018/04/03/attention.html
 """
 
 import math
@@ -14,15 +15,29 @@ def get_clones(module: nn.Module, num_of_deep_copies: int):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(num_of_deep_copies)])
 
 
-class PositionalEmbedding(nn.Module):
+class Embedding(nn.Module):
     """Implementation of Positional Encoding function."""
     def __init__(self, 
-                 p_drop: float,
+                 vocab: int,
+                 d_model: int,
+                ) -> None:
+        super().__init__()
+        self.embedding = nn.Embedding(vocab, d_model)
+        self.d_model = d_model
+        
+    def forward(self, x: torch.Tensor):
+        return self.embedding(x) * math.sqrt(self.d_model)
+    
+    
+class PositionalEncoding(nn.Module):
+    """Implementation of Positional Encoding function."""
+    def __init__(self, 
                  max_len: int,
-                 d_model: int) -> None:
+                 d_model: int,
+                 p_drop: float,
+                ) -> None:
         super().__init__()
         self.dropout = nn.Dropout(p_drop)
-        self.src_embed = nn.Embedding(max_len, d_model)
         pe = torch.zeros(max_len, d_model)
         pos = torch.arange(0, max_len).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, d_model, 2)
@@ -33,39 +48,9 @@ class PositionalEmbedding(nn.Module):
         self.register_buffer("pe", pe)  # parameter is saved but not trained
         
     def forward(self, x: torch.Tensor):
-        x = self.src_embed(x) + nn.Parameter(self.pe, requires_grad=False)     
+        x = x + nn.Parameter(self.pe, requires_grad=False)     
         return self.dropout(x)
     
-
-# class Attention(nn.Module):
-#     """Implementation of Scaled Dot-Product Attention module."""
-#     def __init__(self, 
-#                  d_model: int, 
-#                  d_k: int,
-#                  ) -> None:
-#         super().__init__()
-#         self.d_k = d_k
-#         self.qkv_nets = get_clones(nn.Linear(d_model, d_k), 3)
-        
-#     def forward(self, 
-#                 query: torch.Tensor, 
-#                 key: torch.Tensor, 
-#                 value: torch.Tensor
-#                 ):
-#         """
-#         Args:
-#             query (torch.Tensor): query tensor, shape (B, max_len, d_k)
-#             key (torch.Tensor): key tensor, shape (B, max_len, d_k)
-#             value (torch.Tensor): value tensor, shape (B, max_len, d_k)
-
-#         Returns:
-#             torch.Tensor: output tensor, shape (B, max_len, d_k)
-#         """
-#         query, key, value = [net(x) for net, x in zip(self.qkv_nets, (query, key, value))]
-#         scaled_dot = torch.matmul(query, key.transpose(-2, -1)).divide(math.sqrt(self.d_k))
-#         out = F.softmax(scaled_dot, dim=-1)
-#         out = torch.matmul(out, value)
-#         return out
 
 def attention(
     query: torch.Tensor, 
@@ -132,6 +117,7 @@ class MultiHeadAttention(nn.Module):
         
         return x
 
+
 class LayerNorm(nn.Module):
     def __init__(self,
                  features: int,
@@ -150,52 +136,141 @@ class LayerNorm(nn.Module):
 
 
 class PositionwiseFeedForward(nn.Module):
-    def __init__(self) -> None:
+    def __init__(self, d_model: int, d_inner: int, p_drop: float) -> None:
         super().__init__()
+        self.linear_1 = nn.Linear(d_model, d_inner)
+        self.linear_2 = nn.Linear(d_inner, d_model)
+        self.dropout = nn.Dropout(p_drop)
     
     def forward(self, x: torch.Tensor):
-        pass
+        x = self.linear_1(x)
+        x = self.linear_2(F.relu(x))
+        return self.dropout(x)
     
+
+class SublayerConnection(nn.Module):
+    def __init__(self, size: int, p_drop: int) -> None:
+        super().__init__()
+        self.norm = LayerNorm(size)
+        self.dropout = nn.Dropout(p_drop)
+        
+    def forward(self, x: torch.Tensor, sublayer: nn.Module):
+        x = self.dropout(self.norm(x + sublayer(x)))
+        return x
+    
+
+class EncoderLayer(nn.Module):
+    """An Encoder Layer for Transformer module."""
+    def __init__(self,
+                 size: int,
+                 multi_attn: nn.Module,
+                 feed_forward: nn.Module,
+                 dropout: float
+                ) -> None:
+        super().__init__()
+        self.multi_attn = multi_attn
+        self.ffn = feed_forward
+        self.sublayers = get_clones(SublayerConnection(size, dropout), 2)
+        
+        
+    def forward(self, x: torch.Tensor):
+        x = self.sublayers[0](x, self.multi_attn(x, x, x))
+        x = self.sublayers[1](x, self.ffn)
+        return x
+
+
+class DecoderLayer(nn.Module):
+    """An Encoder Layer for Transformer module."""
+    def __init__(self,
+        size: int,
+        multi_attn: nn.Module,
+        src_attn: nn.Module,
+    ) -> None:
+        super().__init__()
+        
+    def forward(self, x: torch.Tensor):
+        return x
+
 
 class Encoder(nn.Module):
-    """Encoder block for Transformer module."""
+    """Core encoder is a stack of N layers"""
     def __init__(self, 
-                 n_heads: int,
-                 d_model: int,
-                 d_k: int,
-                 d_v: int,
-                 d_inner: int
-                 ) -> None:
+        layer: nn.Module, 
+        N: int
+    ) -> None:
         super().__init__()
+        self.layers = get_clones(layer, N)
         
     def forward(self, x: torch.Tensor):
-        pass
-    
+        for layer in self.layers:
+            x = layer(x)
+        return x
+
 
 class Decoder(nn.Module):
-    """Decoder Block for Transformer module."""
-    def __init__(self) -> None:
+    """Decoder composed of N decoder layers with mask"""
+    def __init__(
+        self,
+        layer,
+        N: int
+    ) -> None:
         super().__init__()
+        self.layers = get_clones(layer, N)
         
     def forward(self, x: torch.Tensor):
-        pass
+        for layer in self.layers:
+            x = layer(x)
+        return x
+
+
+class EncoderDecoder(nn.Module):
+    """
+    A standard Encoder-Decoder architecture. Base for this and many 
+    other models.
+    """
+    def __init__(self, encoder, decoder, src_embed, tgt_embed, generator):
+        super(EncoderDecoder, self).__init__()
+        self.encoder = encoder
+        self.decoder = decoder
+        self.src_embed = src_embed
+        self.tgt_embed = tgt_embed
+        self.generator = generator
+        
+    def forward(self, src, tgt, src_mask, tgt_mask):
+        "Take in and process masked src and target sequences."
+        return self.decode(self.encode(src, src_mask), src_mask,
+                            tgt, tgt_mask)
     
+    def encode(self, src, src_mask):
+        return self.encoder(self.src_embed(src), src_mask)
+    
+    def decode(self, memory, src_mask, tgt, tgt_mask):
+        return self.decoder(self.tgt_embed(tgt), memory, src_mask, tgt_mask)
 
-class Transformer(nn.Module):
-    """
-    Transformer Module in the paper "Attention is all you need". 
-    Link: https://arxiv.org/pdf/1706.03762.pdf
-    """
-    def __init__(self, 
-                 n_heads: int,
-                 d_model: int,
-                 d_k: int,
-                 d_inner: int
-                 ) -> None:
-        super().__init__()
 
-    def forward(self, x: torch.Tensor):
-        pass
+def make_model(src_vocab, tgt_vocab, N=6, 
+               d_model=512, d_ff=2048, h=8, dropout=0.1):
+    "Helper: Construct a model from hyperparameters."
+    c = copy.deepcopy
+    
+    attn = MultiHeadAttention(h, d_model)
+    ff = PositionwiseFeedForward(d_model, d_ff, dropout)
+    position = PositionalEncoding(d_model, dropout)
+    
+    model = EncoderDecoder(
+        Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
+        Decoder(DecoderLayer(d_model, c(attn), c(attn), 
+                             c(ff), dropout), N),
+        nn.Sequential(Embedding(d_model, src_vocab), c(position)),
+        nn.Sequential(Embedding(d_model, tgt_vocab), c(position)),
+    )
+    
+    # This was important from their code. 
+    # Initialize parameters with Glorot / fan_avg.
+    for p in model.parameters():
+        if p.dim() > 1:
+            nn.init.xavier_uniform(p)
+    return model
     
 
 if __name__ == "__main__":
