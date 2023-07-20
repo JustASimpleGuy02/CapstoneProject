@@ -1,7 +1,7 @@
 import sys
 import os
 
-sys.path.append(os.path.join(__file__, "..", ".."))
+sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
 
 from fastapi import FastAPI
 from pydantic import BaseModel

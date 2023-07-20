@@ -1,14 +1,18 @@
+import sys
+import os
+import numpy as np
+import cv2
+
+sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from App.worker.worker import Worker
 from App.controller import search_controller
-import os
-import numpy as np
-import cv2
 
-IMAGE_FOLDER = os.path.join(__file__, "..", "images")
-QSS_FOLDER = os.path.join(__file__, "..", "qss_files")
+IMAGE_FOLDER = os.path.abspath(os.path.join(__file__, "..", "images"))
+QSS_FOLDER = os.path.abspath(os.path.join(__file__, "..", "qss_files"))
 
 def rescale_image(image):
     h, w = image.shape[:2]
