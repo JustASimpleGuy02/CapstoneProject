@@ -8,7 +8,7 @@ from PIL import Image
 
 fclip = FashionCLIP('fashion-clip')
 
-DATA_PATH = os.path.abspath(os.path.join(__file__, "..", "..", "..", "data"))
+DATA_PATH = os.path.abspath(os.path.join(__file__, "..", "..", "data"))
 
 img_dir = os.path.join(DATA_PATH, "demo", "data_for_fashion_clip")
 
@@ -38,9 +38,8 @@ def load_image(path_to_image: str, backend: str = 'cv2', toRGB: bool = True) -> 
 
     return image
 
-def search(prompt: str,
-           search_done,
-           n_sample: int = -1):
+def search_image(prompt: str,
+             n_sample: int = -1):
     """_summary_
 
     Args:
@@ -58,10 +57,10 @@ def search(prompt: str,
     image_path = os.path.join(img_dir, found_image_name)
 
     image = load_image(image_path)
-
+    
     image_1 = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     
-    search_done.emit(image_1)
+    return os.path.basename(image_path)
 
 def embedding(image_dir: str, n_sample: int = 0):
     image_paths = sorted(glob(os.path.join(image_dir, "*.jpg")))
