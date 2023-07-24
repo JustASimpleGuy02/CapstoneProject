@@ -1,4 +1,5 @@
 data/*
 # App/*
+model/*
 user_items/*
 *.pyc

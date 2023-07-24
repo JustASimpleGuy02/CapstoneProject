@@ -1,5 +1,8 @@
 matplotlib
 ipykernel
 tqdm
+PyQt5
+fastapi
+opencv-python-headless
+uvicorn
 fashion-clip
-opencv-python 
