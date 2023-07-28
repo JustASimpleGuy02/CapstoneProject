@@ -35,3 +35,16 @@ Download files from: [Here](https://drive.google.com/drive/folders/1EVNyUIoszvw4
 ## Colab
 
 Get a copy from: [Here](https://colab.research.google.com/drive/13QyNX2XlQkaO42m7yktEaXr9fZKKlYHB?authuser=2#scrollTo=oACMlxLku3uE)
+
+## Reference
+```
+@misc{cg2021trainCLIP,
+  author = {Cade Gordon},
+  title = {train-CLIP},
+  year = {2021},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  doi = {10.5281/zenodo.4915843},
+  howpublished = {\url{https://github.com/Zasder3/train-CLIP}}
+}
+```
