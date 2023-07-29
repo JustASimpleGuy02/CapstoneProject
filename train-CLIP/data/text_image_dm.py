@@ -146,10 +146,19 @@ class TextImageDataModule(LightningDataModule):
         return parser
     
     def setup(self, stage=None):
-        self.dataset = TextImageDataset(self.folder, image_size=self.image_size, resize_ratio=self.resize_ratio, shuffle=self.shuffle, custom_tokenizer=not self.custom_tokenizer is None)
+        self.dataset = TextImageDataset(self.folder, 
+                                        image_size=self.image_size, 
+                                        resize_ratio=self.resize_ratio, 
+                                        shuffle=self.shuffle, 
+                                        custom_tokenizer=not self.custom_tokenizer is None)
     
     def train_dataloader(self):
-        return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=self.shuffle, num_workers=self.num_workers, drop_last=True , collate_fn=self.dl_collate_fn)
+        return DataLoader(self.dataset, 
+                          batch_size=self.batch_size, 
+                          shuffle=self.shuffle, 
+                          num_workers=self.num_workers, 
+                          drop_last=True , 
+                          collate_fn=self.dl_collate_fn)
     
     def dl_collate_fn(self, batch):
         if self.custom_tokenizer is None:
