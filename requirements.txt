@@ -14,3 +14,4 @@ regex
 scikit-image
 pytorch_lightning
 git+https://github.com/katsura-jp/pytorch-cosine-annealing-with-warmup
+fastapi
