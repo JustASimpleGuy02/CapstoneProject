@@ -1,14 +1,15 @@
 import os
 from glob import glob
-from PyQt5.QtCore import pyqtSignal
 from fashion_clip.fashion_clip import FashionCLIP
 import numpy as np
 import cv2
 from PIL import Image
+import io
+import base64
 
 fclip = FashionCLIP('fashion-clip')
 
-DATA_PATH = os.path.abspath(os.path.join(__file__, "..", "..", "..", "data"))
+DATA_PATH = os.path.abspath(os.path.join(__file__, "..", "..", "data"))
 
 img_dir = os.path.join(DATA_PATH, "demo", "data_for_fashion_clip")
 
@@ -38,9 +39,8 @@ def load_image(path_to_image: str, backend: str = 'cv2', toRGB: bool = True) -> 
 
     return image
 
-def search(prompt: str,
-           search_done,
-           n_sample: int = -1):
+def search_image(prompt: str,
+             n_sample: int = -1):
     """_summary_
 
     Args:
@@ -57,11 +57,20 @@ def search(prompt: str,
 
     image_path = os.path.join(img_dir, found_image_name)
 
-    image = load_image(image_path)
-
-    image_1 = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    image = Image.open(image_path)
     
-    search_done.emit(image_1)
+    image_bytes = io.BytesIO()
+
+    image.save(image_bytes, format="JPEG")
+
+    base64_image = base64.b64encode(image_bytes.getvalue()).decode("utf-8")
+    
+    json_obj = {
+        "image_name": os.path.basename(image_path),
+        "image_path": image_path,
+        "image_base64": base64_image
+    }
+    return json_obj
 
 def embedding(image_dir: str, n_sample: int = 0):
     image_paths = sorted(glob(os.path.join(image_dir, "*.jpg")))
