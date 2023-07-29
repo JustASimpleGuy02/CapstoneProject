@@ -6,3 +6,11 @@ fastapi
 opencv-python-headless
 uvicorn
 fashion-clip
+snoop
+scikit-learn
+transformers
+ftfy
+regex
+scikit-image
+pytorch_lightning
+git+https://github.com/katsura-jp/pytorch-cosine-annealing-with-warmup
