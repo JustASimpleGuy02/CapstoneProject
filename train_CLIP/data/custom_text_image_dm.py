@@ -193,7 +193,6 @@ class TextImageDataset(Dataset):
         item_id = os.path.splitext(image_name)[0]
         item_metadata = self.process_metadata(self.metadatas[item_id])
         
-        
         return image, item_metadata, image_name
 
 class CustomTextImageDataModule(LightningDataModule):
