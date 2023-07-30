@@ -1,3 +1,5 @@
+import os
+import os.path as osp
 import yaml
 from argparse import ArgumentParser
 from pytorch_lightning import Trainer
@@ -6,7 +8,10 @@ from clip import CLIPWrapper
 
 
 def main(hparams):
-    config_dir = 'models/configs/ViT.yaml' if 'ViT' in hparams.model_name else 'models/configs/RN.yaml'
+    config_dir = 'train_CLIP/clip/configs/ViT.yaml' \
+        if 'ViT' in hparams.model_name \
+        else 'train_CLIP/clip/configs/RN.yaml'
+        
     with open(config_dir) as fin:
         config = yaml.safe_load(fin)[hparams.model_name]
 

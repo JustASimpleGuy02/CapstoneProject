@@ -12,6 +12,7 @@ transformers
 ftfy
 regex
 scikit-image
-pytorch_lightning
+pytorch_lightning==1.8.6
 git+https://github.com/katsura-jp/pytorch-cosine-annealing-with-warmup
 fastapi
+torchshow

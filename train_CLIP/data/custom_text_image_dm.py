@@ -12,10 +12,8 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as T
 from pytorch_lightning import LightningDataModule
 
-
 from train_CLIP.data import process_text
 from train_CLIP import clip
-
 
 
 class TextImageDataset(Dataset):
@@ -195,7 +193,7 @@ class TextImageDataset(Dataset):
         
         return image, item_metadata, image_name
 
-class CustomTextImageDataModule(LightningDataModule):
+class TextImageDataModule(LightningDataModule):
     
     def __init__(self,
                  data_dir: str,
