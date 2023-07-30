@@ -6,8 +6,9 @@ import math
 import yaml
 import copy
 from cosine_annealing_warmup import CosineAnnealingWarmupRestarts
-from .model import CLIP
-
+# from .model import CLIP
+from .clip import load
+import numpy as np
 
 class CLIPWrapper(pl.LightningModule):
     def __init__(self,
@@ -24,8 +25,8 @@ class CLIPWrapper(pl.LightningModule):
         super().__init__()
 
         self.model_name = model_name
-        self.model = CLIP(**config)
-        # self.model, self.preprocess = clip.load(model_name)
+        # self.model = CLIP(**config)
+        self.model, self.preprocess = load(model_name)
         self.minibatch_size = minibatch_size
         self.isViT = 'ViT' in self.model_name
 
@@ -35,7 +36,8 @@ class CLIPWrapper(pl.LightningModule):
     @property
     def num_training_steps(self) -> int:
         """Total training steps inferred from datamodule and devices."""
-        dataset = self.train_dataloader()
+        # dataset = self.train_dataloader()
+        dataset = self.trainer.datamodule.train_dataloader()
         if self.trainer.max_steps:
             return self.trainer.max_steps
 

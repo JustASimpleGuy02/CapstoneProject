@@ -1,0 +1,308 @@
+usage: train.py [-h] --model_name MODEL_NAME [--minibatch_size MINIBATCH_SIZE]
+                --folder FOLDER [--batch_size BATCH_SIZE]
+                [--num_workers NUM_WORKERS] [--image_size IMAGE_SIZE]
+                [--resize_ratio RESIZE_RATIO] [--shuffle SHUFFLE]
+                [--logger [LOGGER]]
+                [--enable_checkpointing [ENABLE_CHECKPOINTING]]
+                [--default_root_dir DEFAULT_ROOT_DIR]
+                [--gradient_clip_val GRADIENT_CLIP_VAL]
+                [--gradient_clip_algorithm GRADIENT_CLIP_ALGORITHM]
+                [--num_nodes NUM_NODES] [--num_processes NUM_PROCESSES]
+                [--devices DEVICES] [--gpus GPUS]
+                [--auto_select_gpus [AUTO_SELECT_GPUS]]
+                [--tpu_cores TPU_CORES] [--ipus IPUS]
+                [--enable_progress_bar [ENABLE_PROGRESS_BAR]]
+                [--overfit_batches OVERFIT_BATCHES]
+                [--track_grad_norm TRACK_GRAD_NORM]
+                [--check_val_every_n_epoch CHECK_VAL_EVERY_N_EPOCH]
+                [--fast_dev_run [FAST_DEV_RUN]]
+                [--accumulate_grad_batches ACCUMULATE_GRAD_BATCHES]
+                [--max_epochs MAX_EPOCHS] [--min_epochs MIN_EPOCHS]
+                [--max_steps MAX_STEPS] [--min_steps MIN_STEPS]
+                [--max_time MAX_TIME]
+                [--limit_train_batches LIMIT_TRAIN_BATCHES]
+                [--limit_val_batches LIMIT_VAL_BATCHES]
+                [--limit_test_batches LIMIT_TEST_BATCHES]
+                [--limit_predict_batches LIMIT_PREDICT_BATCHES]
+                [--val_check_interval VAL_CHECK_INTERVAL]
+                [--log_every_n_steps LOG_EVERY_N_STEPS]
+                [--accelerator ACCELERATOR] [--strategy STRATEGY]
+                [--sync_batchnorm [SYNC_BATCHNORM]] [--precision PRECISION]
+                [--enable_model_summary [ENABLE_MODEL_SUMMARY]]
+                [--num_sanity_val_steps NUM_SANITY_VAL_STEPS]
+                [--resume_from_checkpoint RESUME_FROM_CHECKPOINT]
+                [--profiler PROFILER] [--benchmark [BENCHMARK]]
+                [--deterministic [DETERMINISTIC]]
+                [--reload_dataloaders_every_n_epochs RELOAD_DATALOADERS_EVERY_N_EPOCHS]
+                [--auto_lr_find [AUTO_LR_FIND]]
+                [--replace_sampler_ddp [REPLACE_SAMPLER_DDP]]
+                [--detect_anomaly [DETECT_ANOMALY]]
+                [--auto_scale_batch_size [AUTO_SCALE_BATCH_SIZE]]
+                [--plugins PLUGINS] [--amp_backend AMP_BACKEND]
+                [--amp_level AMP_LEVEL]
+                [--move_metrics_to_cpu [MOVE_METRICS_TO_CPU]]
+                [--multiple_trainloader_mode MULTIPLE_TRAINLOADER_MODE]
+                [--inference_mode [INFERENCE_MODE]]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --model_name MODEL_NAME
+  --minibatch_size MINIBATCH_SIZE
+  --folder FOLDER       directory of your training folder
+  --batch_size BATCH_SIZE
+                        size of the batch
+  --num_workers NUM_WORKERS
+                        number of workers for the dataloaders
+  --image_size IMAGE_SIZE
+                        size of the images
+  --resize_ratio RESIZE_RATIO
+                        minimum size of images during random crop
+  --shuffle SHUFFLE     whether to use shuffling during sampling
+
+pl.Trainer:
+  --logger [LOGGER]     Logger (or iterable collection of loggers) for
+                        experiment tracking. A ``True`` value uses the default
+                        ``TensorBoardLogger``. ``False`` will disable logging.
+                        If multiple loggers are provided, local files
+                        (checkpoints, profiler traces, etc.) are saved in the
+                        ``log_dir`` of the first logger. Default: ``True``.
+  --enable_checkpointing [ENABLE_CHECKPOINTING]
+                        If ``True``, enable checkpointing. It will configure a
+                        default ModelCheckpoint callback if there is no user-
+                        defined ModelCheckpoint in :paramref:`~pytorch_lightni
+                        ng.trainer.trainer.Trainer.callbacks`. Default:
+                        ``True``.
+  --default_root_dir DEFAULT_ROOT_DIR
+                        Default path for logs and weights when no
+                        logger/ckpt_callback passed. Default: ``os.getcwd()``.
+                        Can be remote file paths such as `s3://mybucket/path`
+                        or 'hdfs://path/'
+  --gradient_clip_val GRADIENT_CLIP_VAL
+                        The value at which to clip gradients. Passing
+                        ``gradient_clip_val=None`` disables gradient clipping.
+                        If using Automatic Mixed Precision (AMP), the
+                        gradients will be unscaled before. Default: ``None``.
+  --gradient_clip_algorithm GRADIENT_CLIP_ALGORITHM
+                        The gradient clipping algorithm to use. Pass
+                        ``gradient_clip_algorithm="value"`` to clip by value,
+                        and ``gradient_clip_algorithm="norm"`` to clip by
+                        norm. By default it will be set to ``"norm"``.
+  --num_nodes NUM_NODES
+                        Number of GPU nodes for distributed training. Default:
+                        ``1``.
+  --num_processes NUM_PROCESSES
+                        Number of processes for distributed training with
+                        ``accelerator="cpu"``. Default: ``1``. .. deprecated::
+                        v1.7 ``num_processes`` has been deprecated in v1.7 and
+                        will be removed in v2.0. Please use
+                        ``accelerator='cpu'`` and ``devices=x`` instead.
+  --devices DEVICES     Will be mapped to either `gpus`, `tpu_cores`,
+                        `num_processes` or `ipus`, based on the accelerator
+                        type.
+  --gpus GPUS           Number of GPUs to train on (int) or which GPUs to
+                        train on (list or str) applied per node Default:
+                        ``None``. .. deprecated:: v1.7 ``gpus`` has been
+                        deprecated in v1.7 and will be removed in v2.0. Please
+                        use ``accelerator='gpu'`` and ``devices=x`` instead.
+  --auto_select_gpus [AUTO_SELECT_GPUS]
+                        If enabled and ``gpus`` or ``devices`` is an integer,
+                        pick available gpus automatically. This is especially
+                        useful when GPUs are configured to be in "exclusive
+                        mode", such that only one process at a time can access
+                        them. Default: ``False``.
+  --tpu_cores TPU_CORES
+                        How many TPU cores to train on (1 or 8) / Single TPU
+                        to train on (1) Default: ``None``. .. deprecated::
+                        v1.7 ``tpu_cores`` has been deprecated in v1.7 and
+                        will be removed in v2.0. Please use
+                        ``accelerator='tpu'`` and ``devices=x`` instead.
+  --ipus IPUS           How many IPUs to train on. Default: ``None``. ..
+                        deprecated:: v1.7 ``ipus`` has been deprecated in v1.7
+                        and will be removed in v2.0. Please use
+                        ``accelerator='ipu'`` and ``devices=x`` instead.
+  --enable_progress_bar [ENABLE_PROGRESS_BAR]
+                        Whether to enable to progress bar by default. Default:
+                        ``True``.
+  --overfit_batches OVERFIT_BATCHES
+                        Overfit a fraction of training/validation data (float)
+                        or a set number of batches (int). Default: ``0.0``.
+  --track_grad_norm TRACK_GRAD_NORM
+                        -1 no tracking. Otherwise tracks that p-norm. May be
+                        set to 'inf' infinity-norm. If using Automatic Mixed
+                        Precision (AMP), the gradients will be unscaled before
+                        logging them. Default: ``-1``.
+  --check_val_every_n_epoch CHECK_VAL_EVERY_N_EPOCH
+                        Perform a validation loop every after every `N`
+                        training epochs. If ``None``, validation will be done
+                        solely based on the number of training batches,
+                        requiring ``val_check_interval`` to be an integer
+                        value. Default: ``1``.
+  --fast_dev_run [FAST_DEV_RUN]
+                        Runs n if set to ``n`` (int) else 1 if set to ``True``
+                        batch(es) of train, val and test to find any bugs (ie:
+                        a sort of unit test). Default: ``False``.
+  --accumulate_grad_batches ACCUMULATE_GRAD_BATCHES
+                        Accumulates grads every k batches or as set up in the
+                        dict. Default: ``None``.
+  --max_epochs MAX_EPOCHS
+                        Stop training once this number of epochs is reached.
+                        Disabled by default (None). If both max_epochs and
+                        max_steps are not specified, defaults to ``max_epochs
+                        = 1000``. To enable infinite training, set
+                        ``max_epochs = -1``.
+  --min_epochs MIN_EPOCHS
+                        Force training for at least these many epochs.
+                        Disabled by default (None).
+  --max_steps MAX_STEPS
+                        Stop training after this number of steps. Disabled by
+                        default (-1). If ``max_steps = -1`` and ``max_epochs =
+                        None``, will default to ``max_epochs = 1000``. To
+                        enable infinite training, set ``max_epochs`` to
+                        ``-1``.
+  --min_steps MIN_STEPS
+                        Force training for at least these number of steps.
+                        Disabled by default (``None``).
+  --max_time MAX_TIME   Stop training after this amount of time has passed.
+                        Disabled by default (``None``). The time duration can
+                        be specified in the format DD:HH:MM:SS (days, hours,
+                        minutes seconds), as a :class:`datetime.timedelta`, or
+                        a dictionary with keys that will be passed to
+                        :class:`datetime.timedelta`.
+  --limit_train_batches LIMIT_TRAIN_BATCHES
+                        How much of training dataset to check (float =
+                        fraction, int = num_batches). Default: ``1.0``.
+  --limit_val_batches LIMIT_VAL_BATCHES
+                        How much of validation dataset to check (float =
+                        fraction, int = num_batches). Default: ``1.0``.
+  --limit_test_batches LIMIT_TEST_BATCHES
+                        How much of test dataset to check (float = fraction,
+                        int = num_batches). Default: ``1.0``.
+  --limit_predict_batches LIMIT_PREDICT_BATCHES
+                        How much of prediction dataset to check (float =
+                        fraction, int = num_batches). Default: ``1.0``.
+  --val_check_interval VAL_CHECK_INTERVAL
+                        How often to check the validation set. Pass a
+                        ``float`` in the range [0.0, 1.0] to check after a
+                        fraction of the training epoch. Pass an ``int`` to
+                        check after a fixed number of training batches. An
+                        ``int`` value can only be higher than the number of
+                        training batches when
+                        ``check_val_every_n_epoch=None``, which validates
+                        after every ``N`` training batches across epochs or
+                        during iteration-based training. Default: ``1.0``.
+  --log_every_n_steps LOG_EVERY_N_STEPS
+                        How often to log within steps. Default: ``50``.
+  --accelerator ACCELERATOR
+                        Supports passing different accelerator types ("cpu",
+                        "gpu", "tpu", "ipu", "hpu", "mps, "auto") as well as
+                        custom accelerator instances. .. deprecated:: v1.5
+                        Passing training strategies (e.g., 'ddp') to
+                        ``accelerator`` has been deprecated in v1.5.0 and will
+                        be removed in v1.7.0. Please use the ``strategy``
+                        argument instead.
+  --strategy STRATEGY   Supports different training strategies with aliases as
+                        well custom strategies. Default: ``None``.
+  --sync_batchnorm [SYNC_BATCHNORM]
+                        Synchronize batch norm layers between process
+                        groups/whole world. Default: ``False``.
+  --precision PRECISION
+                        Double precision (64), full precision (32), half
+                        precision (16) or bfloat16 precision (bf16). Can be
+                        used on CPU, GPU, TPUs, HPUs or IPUs. Default: ``32``.
+  --enable_model_summary [ENABLE_MODEL_SUMMARY]
+                        Whether to enable model summarization by default.
+                        Default: ``True``.
+  --num_sanity_val_steps NUM_SANITY_VAL_STEPS
+                        Sanity check runs n validation batches before starting
+                        the training routine. Set it to `-1` to run all
+                        batches in all validation dataloaders. Default: ``2``.
+  --resume_from_checkpoint RESUME_FROM_CHECKPOINT
+                        Path/URL of the checkpoint from which training is
+                        resumed. If there is no checkpoint file at the path,
+                        an exception is raised. If resuming from mid-epoch
+                        checkpoint, training will start from the beginning of
+                        the next epoch. .. deprecated:: v1.5
+                        ``resume_from_checkpoint`` is deprecated in v1.5 and
+                        will be removed in v2.0. Please pass the path to
+                        ``Trainer.fit(..., ckpt_path=...)`` instead.
+  --profiler PROFILER   To profile individual steps during training and assist
+                        in identifying bottlenecks. Default: ``None``.
+  --benchmark [BENCHMARK]
+                        The value (``True`` or ``False``) to set
+                        ``torch.backends.cudnn.benchmark`` to. The value for
+                        ``torch.backends.cudnn.benchmark`` set in the current
+                        session will be used (``False`` if not manually set).
+                        If :paramref:`~pytorch_lightning.trainer.Trainer.deter
+                        ministic` is set to ``True``, this will default to
+                        ``False``. Override to manually set a different value.
+                        Default: ``None``.
+  --deterministic [DETERMINISTIC]
+                        If ``True``, sets whether PyTorch operations must use
+                        deterministic algorithms. Set to ``"warn"`` to use
+                        deterministic algorithms whenever possible, throwing
+                        warnings on operations that don't support
+                        deterministic mode (requires PyTorch 1.11+). If not
+                        set, defaults to ``False``. Default: ``None``.
+  --reload_dataloaders_every_n_epochs RELOAD_DATALOADERS_EVERY_N_EPOCHS
+                        Set to a non-negative integer to reload dataloaders
+                        every n epochs. Default: ``0``.
+  --auto_lr_find [AUTO_LR_FIND]
+                        If set to True, will make trainer.tune() run a
+                        learning rate finder, trying to optimize initial
+                        learning for faster convergence. trainer.tune() method
+                        will set the suggested learning rate in self.lr or
+                        self.learning_rate in the LightningModule. To use a
+                        different key set a string instead of True with the
+                        key name. Default: ``False``.
+  --replace_sampler_ddp [REPLACE_SAMPLER_DDP]
+                        Explicitly enables or disables sampler replacement. If
+                        not specified this will toggled automatically when DDP
+                        is used. By default it will add ``shuffle=True`` for
+                        train sampler and ``shuffle=False`` for val/test
+                        sampler. If you want to customize it, you can set
+                        ``replace_sampler_ddp=False`` and add your own
+                        distributed sampler.
+  --detect_anomaly [DETECT_ANOMALY]
+                        Enable anomaly detection for the autograd engine.
+                        Default: ``False``.
+  --auto_scale_batch_size [AUTO_SCALE_BATCH_SIZE]
+                        If set to True, will `initially` run a batch size
+                        finder trying to find the largest batch size that fits
+                        into memory. The result will be stored in
+                        self.batch_size in the LightningModule or
+                        LightningDataModule depending on your setup.
+                        Additionally, can be set to either `power` that
+                        estimates the batch size through a power search or
+                        `binsearch` that estimates the batch size through a
+                        binary search. Default: ``False``.
+  --plugins PLUGINS     Plugins allow modification of core behavior like ddp
+                        and amp, and enable custom lightning plugins. Default:
+                        ``None``.
+  --amp_backend AMP_BACKEND
+                        The mixed precision backend to use ("native" or
+                        "apex"). Default: ``'native''``.
+  --amp_level AMP_LEVEL
+                        The optimization level to use (O1, O2, etc...). By
+                        default it will be set to "O2" if ``amp_backend`` is
+                        set to "apex". .. deprecated:: v1.8 Setting
+                        ``amp_level`` inside the ``Trainer`` is deprecated in
+                        v1.8.0 and will be removed in v1.10.0. Please set it
+                        inside the specific precision plugin and pass it to
+                        the ``Trainer``.
+  --move_metrics_to_cpu [MOVE_METRICS_TO_CPU]
+                        Whether to force internal logged metrics to be moved
+                        to cpu. This can save some gpu memory, but can make
+                        training slower. Use with attention. Default:
+                        ``False``.
+  --multiple_trainloader_mode MULTIPLE_TRAINLOADER_MODE
+                        How to loop over the datasets when there are multiple
+                        train loaders. In 'max_size_cycle' mode, the trainer
+                        ends one epoch when the largest dataset is traversed,
+                        and smaller datasets reload when running out of their
+                        data. In 'min_size' mode, all the datasets reload when
+                        reaching the minimum length of datasets. Default:
+                        ``"max_size_cycle"``.
+  --inference_mode [INFERENCE_MODE]
+                        Whether to use :func:`torch.inference_mode` or
+                        :func:`torch.no_grad` during evaluation
+                        (``validate``/``test``/``predict``).

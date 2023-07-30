@@ -196,7 +196,7 @@ class TextImageDataset(Dataset):
 class TextImageDataModule(LightningDataModule):
     
     def __init__(self,
-                 data_dir: str,
+                 folder: str,
                  batch_size: int,
                  num_workers=0,
                  image_size=224,
@@ -217,7 +217,7 @@ class TextImageDataModule(LightningDataModule):
             filter_description (bool, optional): Use only description as text. Defaults to True.
         """
         super().__init__()
-        self.data_dir = data_dir
+        self.folder = folder
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.image_size = image_size
@@ -239,7 +239,7 @@ class TextImageDataModule(LightningDataModule):
         return parser
     
     def setup(self, stage = None):
-        self.dataset = TextImageDataset(data_dir=self.data_dir, 
+        self.dataset = TextImageDataset(data_dir=self.folder, 
                                               image_size=self.image_size, 
                                               resize_ratio=self.resize_ratio, 
                                               shuffle=self.shuffle, 

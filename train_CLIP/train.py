@@ -3,7 +3,7 @@ import os.path as osp
 import yaml
 from argparse import ArgumentParser
 from pytorch_lightning import Trainer
-from data.text_image_dm import TextImageDataModule
+from data.custom_text_image_dm import TextImageDataModule
 from clip import CLIPWrapper
 
 
@@ -21,7 +21,10 @@ def main(hparams):
     model = CLIPWrapper(hparams.model_name, config, hparams.minibatch_size)
     del hparams.model_name
     dm = TextImageDataModule.from_argparse_args(hparams)
-    trainer = Trainer.from_argparse_args(hparams, precision=16, max_epochs=32)
+    trainer = Trainer.from_argparse_args(hparams, 
+                                        #  precision=16, 
+                                         max_epochs=32
+                                         )
     trainer.fit(model, dm)
 
 
