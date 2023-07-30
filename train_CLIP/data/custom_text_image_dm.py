@@ -17,7 +17,7 @@ from train_CLIP import clip
 
 
 
-class CustomTextImageDataset(Dataset):
+class TextImageDataset(Dataset):
     
     def __init__(self,
                  data_dir: str,
@@ -174,7 +174,68 @@ class CustomTextImageDataset(Dataset):
         
         return image_tensor, tokenized_text, image_name
 
-# class CustomTextImageDataModule(LightningDataModule):
+
+class TextImageDataModule(LightningDataModule):
+    def __init__(self,
+                 folder: str,
+                 batch_size: int,
+                 num_workers=0,
+                 image_size=224,
+                 resize_ratio=0.75,
+                 shuffle=False,
+                 custom_tokenizer=None
+                 ):
+        """Create a text image datamodule from directories with congruent text and image names.
+
+        Args:
+            folder (str): Folder containing images and text files matched by their paths' respective "stem"
+            batch_size (int): The batch size of each dataloader.
+            num_workers (int, optional): The number of workers in the DataLoader. Defaults to 0.
+            image_size (int, optional): The size of outputted images. Defaults to 224.
+            resize_ratio (float, optional): Minimum percentage of image contained by resize. Defaults to 0.75.
+            shuffle (bool, optional): Whether or not to have shuffling behavior during sampling. Defaults to False.
+            custom_tokenizer (transformers.AutoTokenizer, optional): The tokenizer to use on the text. Defaults to None.
+        """
+        super().__init__()
+        self.folder =folder
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.image_size = image_size
+        self.resize_ratio = resize_ratio
+        self.shuffle = shuffle
+        self.custom_tokenizer = custom_tokenizer
     
-#     def __init__(self) -> None:
-#         super().__init__()
+    @staticmethod
+    def add_argparse_args(parent_parser):
+        parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False)
+        parser.add_argument('--folder', type=str, required=True, help='directory of your training folder')
+        parser.add_argument('--batch_size', type=int, help='size of the batch')
+        parser.add_argument('--num_workers', type=int, default=0, help='number of workers for the dataloaders')
+        parser.add_argument('--image_size', type=int, default=224, help='size of the images')
+        parser.add_argument('--resize_ratio', type=float, default=0.75, help='minimum size of images during random crop')
+        parser.add_argument('--shuffle', type=bool, default=False, help='whether to use shuffling during sampling')
+        return parser
+    
+    def setup(self, stage=None):
+        self.dataset = TextImageDataset(self.folder, 
+                                        image_size=self.image_size, 
+                                        resize_ratio=self.resize_ratio, 
+                                        shuffle=self.shuffle, 
+                                        custom_tokenizer=not self.custom_tokenizer is None)
+    
+    def train_dataloader(self):
+        return DataLoader(self.dataset, 
+                          batch_size=self.batch_size, 
+                          shuffle=self.shuffle, 
+                          num_workers=self.num_workers, 
+                          drop_last=True , 
+                          collate_fn=self.dl_collate_fn)
+    
+    def dl_collate_fn(self, batch):
+        if self.custom_tokenizer is None:
+            return torch.stack([row[0] for row in batch]), \
+                    torch.stack([row[1] for row in batch])
+        else:
+            return torch.stack([row[0] for row in batch]), \
+                                self.custom_tokenizer([row[1] for row in batch], 
+                                padding=True, truncation=True, return_tensors="pt")

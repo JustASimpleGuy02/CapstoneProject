@@ -32,17 +32,28 @@ Create a folder `csv_files`, place it in folder `data`
 
 Download files from: [Here](https://drive.google.com/drive/folders/1EVNyUIoszvw4tNUrVsLgJ78FpHSNtZe_?usp=sharing)
 
+```
+$ unzip ${csv_file} -d data/
+```
+
 ### Demo files
 
 Create a folder `demo`, place it in folder `data`
 
 Download files from: [Here](https://drive.google.com/drive/folders/1EVNyUIoszvw4tNUrVsLgJ78FpHSNtZe_?usp=sharing)
 
+```
+$ unzip ${demo_file} -d data/
+```
+
 ## Colab
 
 Get a copy from: [Here](https://colab.research.google.com/drive/13QyNX2XlQkaO42m7yktEaXr9fZKKlYHB?authuser=2#scrollTo=oACMlxLku3uE)
 
 ## Training
+
+
+## Deployment
 
 
 ## Reference

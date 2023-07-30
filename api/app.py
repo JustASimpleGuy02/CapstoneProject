@@ -17,12 +17,10 @@ class TextInput(BaseModel):
     
 @app.post("/search")
 def search_item(input_data: TextInput):
-    
     processed_text = input_data.text.lower()
-    
     json_obj = search_image(prompt=processed_text)
-    
     return json_obj
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=8000)

@@ -2,13 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
-import numpy as np
 import math
 import yaml
 import copy
 from cosine_annealing_warmup import CosineAnnealingWarmupRestarts
 from .model import CLIP
-import clip
 
 
 class CLIPWrapper(pl.LightningModule):
