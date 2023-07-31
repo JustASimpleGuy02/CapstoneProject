@@ -5,15 +5,15 @@ import json
 from PIL import Image
 import PIL
 import argparse
-from pytorch_lightning.utilities.types import TRAIN_DATALOADERS
+from pytorch_lightning.utilities.types import TRAIN_DATALOADERS 
 
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as T
 from pytorch_lightning import LightningDataModule
 
-from train_CLIP.data import process_text
-from train_CLIP import clip
+from data import process_text
+from clip import tokenize
 
 
 class TextImageDataset(Dataset):
@@ -169,7 +169,7 @@ class TextImageDataset(Dataset):
         item_metadata = self.process_metadata(self.metadatas[item_id])
         
         tokenized_text = item_metadata if self.custom_tokenizer \
-            else clip.tokenize(item_metadata)[0]
+            else tokenize(item_metadata)[0]
         
         return image_tensor, tokenized_text
     

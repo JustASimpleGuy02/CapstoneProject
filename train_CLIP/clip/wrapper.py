@@ -9,6 +9,7 @@ from cosine_annealing_warmup import CosineAnnealingWarmupRestarts
 # from .model import CLIP
 from .clip import load
 import numpy as np
+import snoop
 
 class CLIPWrapper(pl.LightningModule):
     def __init__(self,
@@ -53,6 +54,7 @@ class CLIPWrapper(pl.LightningModule):
     # Training loss: https://github.com/openai/CLIP/issues/83
     # Mini-batching thanks to https://github.com/crowsonkb / https://twitter.com/RiversHaveWings
     # Multi-GPU support: https://github.com/MicPie/clasp
+    @snoop
     def training_step(self, train_batch, idx):
         # get optimizers and scheduler
         optimizer = self.optimizers()
