@@ -7,15 +7,146 @@ import yaml
 import copy
 from cosine_annealing_warmup import CosineAnnealingWarmupRestarts
 
-# from .model import CLIP
-from .clip import load
+from . import clip, model
 import numpy as np
-from icecream import ic
 import snoop
+from icecream import ic
+
+
+class SimpleCLIPWrapper(pl.LightningModule):
+    def __init__(
+        self,
+        model_name: str,
+        model: nn.Module,
+        config: dict,
+        minibatch_size: int,
+    ):
+        """A lightning wrapper for a CLIP model as specified in the paper.
+
+        Args:
+            model_name (str): A case sensitive visual model name.
+            config (dict): A dictionary containing the CLIP instantiation parameters.
+        """
+        super().__init__()
+
+        self.model_name = model_name
+        self.model = model
+        self.minibatch_size = minibatch_size
+        self.isViT = "ViT" in self.model_name
+        self.automatic_optimization = False
+
+    # Sourced from https://github.com/PyTorchLightning/pytorch-lightning/issues/5449
+    @property
+    def num_training_steps(self) -> int:
+        """Total training steps inferred from datamodule and devices."""
+        # dataset = self.train_dataloader()
+        dataset = self.trainer.datamodule.train_dataloader()
+        if self.trainer.max_steps:
+            return self.trainer.max_steps
+
+        dataset_size = len(dataset)
+
+        num_devices = max(1, self.trainer.num_gpus, self.trainer.num_processes)
+        if self.trainer.tpu_cores:
+            num_devices = max(num_devices, self.trainer.tpu_cores)
+
+        effective_batch_size = (
+            dataset.batch_size
+            * self.trainer.accumulate_grad_batches
+            * num_devices
+        )
+        return (dataset_size // effective_batch_size) * self.trainer.max_epochs
+
+    # Training loss: https://github.com/openai/CLIP/issues/83
+    # Mini-batching thanks to https://github.com/crowsonkb / https://twitter.com/RiversHaveWings
+    # Multi-GPU support: https://github.com/MicPie/clasp
+    def training_step(self, train_batch, idx):
+        
+        # get optimizers and scheduler
+        optimizer = self.optimizers()
+
+        images, texts = train_batch
+
+        image_logits, text_logits = self.model(images, texts)
+
+        ground_truth = torch.arange(len(images),dtype=torch.long).to(image_logits.device)
+
+        total_loss = (F.cross_entropy(image_logits,ground_truth) + F.cross_entropy(text_logits,ground_truth))/2
+        total_loss.backward()
+        
+        acc_i = (torch.argmax(image_logits, 1) == ground_truth).sum()
+        acc_t = (torch.argmax(image_logits, 0) == ground_truth).sum()
+        
+        self.log_dict(
+            {
+                "loss": total_loss / len(images),
+                "acc": (acc_i + acc_t) / 2 / len(images),
+            },
+            prog_bar=True,
+        )
+
+        # Mix-precision Training: https://github.com/openai/CLIP/issues/57
+        model.convert_models_to_fp32(self.model)
+        optimizer.step()
+        lr_scheduler = self.lr_schedulers()
+        lr_scheduler.step()
+        self.model.logit_scale.data.clamp_(-np.log(100), np.log(100))
+        
+        model.convert_weights(self.model)
+
+    def validation_step(self, val_batch, idx):
+        image, text = val_batch
+        image_logits, text_logits = self.forward(image, text)
+        ground_truth = torch.arange(len(image_logits))
+        loss = (
+            F.cross_entropy(image_logits, ground_truth)
+            + F.cross_entropy(text_logits, ground_truth)
+        ).div(2)
+        self.log("val_loss", loss)
+
+    def configure_optimizers(self):
+        lr = {
+            "RN50": 5e-4,
+            "RN101": 5e-4,
+            "RN50x4": 5e-4,
+            "RN50x16": 4e-4,
+            "RN50x64": 3.6e-4,
+            "ViT-B/32": 5e-4,
+            "ViT-B/16": 5e-4,
+            "ViT-L/14": 4e-4,
+            "ViT-L/14-336px": 2e-5,
+        }[self.model_name]
+
+        optimizer = torch.optim.AdamW(
+            self.model.parameters(),
+            lr=lr,
+            betas=(0.9, 0.98 if self.isViT else 0.999),
+            eps=1e-6 if self.isViT else 1e-8,
+            weight_decay=0.2,
+        )
+
+        # Source: https://github.com/openai/CLIP/issues/107
+        # Use pip install 'git+https://github.com/katsura-jp/pytorch-cosine-annealing-with-warmup'
+        lr_scheduler = CosineAnnealingWarmupRestarts(
+            optimizer,
+            first_cycle_steps=self.num_training_steps,
+            cycle_mult=1.0,
+            max_lr=lr,
+            min_lr=0,
+            warmup_steps=2000,
+        )
+
+        return {"optimizer": optimizer, "lr_scheduler": lr_scheduler}
 
 
 class CLIPWrapper(pl.LightningModule):
-    def __init__(self, model_name: str, config: dict, minibatch_size: int):
+    def __init__(
+        self,
+        model_name: str,
+        model: nn.Module,
+        config: dict,
+        minibatch_size: int,
+    ):
         """A lightning wrapper for a CLIP model as specified in the paper.
 
         Args:
@@ -26,7 +157,7 @@ class CLIPWrapper(pl.LightningModule):
 
         self.model_name = model_name
         # self.model = CLIP(**config)
-        self.model, self.preprocess = load(model_name)
+        self.model = model
         self.minibatch_size = minibatch_size
         self.isViT = "ViT" in self.model_name
 
@@ -57,7 +188,6 @@ class CLIPWrapper(pl.LightningModule):
     # Training loss: https://github.com/openai/CLIP/issues/83
     # Mini-batching thanks to https://github.com/crowsonkb / https://twitter.com/RiversHaveWings
     # Multi-GPU support: https://github.com/MicPie/clasp
-    # @snoop
     def training_step(self, train_batch, idx):
         # get optimizers and scheduler
         optimizer = self.optimizers()
@@ -131,6 +261,7 @@ class CLIPWrapper(pl.LightningModule):
                 F.cross_entropy(image_logits, ground_truth)
                 + F.cross_entropy(image_logits.t(), ground_truth)
             ) / 2
+            
             self.manual_backward(loss)
 
         # text loss
@@ -150,20 +281,32 @@ class CLIPWrapper(pl.LightningModule):
             ) / 2
             self.manual_backward(loss)
 
+        # Mix-precision Training: https://github.com/openai/CLIP/issues/57
+        model.convert_models_to_fp32(self.model)
         optimizer.step()
         lr_scheduler = self.lr_schedulers()
         lr_scheduler.step()
         self.model.logit_scale.data.clamp_(-np.log(100), np.log(100))
+        
+        model.convert_weights(self.model)
 
     def validation_step(self, val_batch, idx):
         image, text = val_batch
-        image_logits, text_logits = self.forward(image, text)
-        ground_truth = torch.arange(len(image_logits))
+        image_logits, text_logits = self.model.forward(image, text)
+        ground_truth = torch.arange(len(image_logits)).to(image_logits.device)
         loss = (
             F.cross_entropy(image_logits, ground_truth)
             + F.cross_entropy(text_logits, ground_truth)
         ).div(2)
-        self.log("val_loss", loss)
+        acc_i = (torch.argmax(image_logits, 1) == ground_truth).sum()
+        acc_t = (torch.argmax(image_logits, 0) == ground_truth).sum()
+        self.log_dict(
+            {
+                "val_loss": loss / len(image),
+                "val_acc": (acc_i + acc_t) / 2 / len(image),
+            },
+            prog_bar=True,
+        )
 
     def configure_optimizers(self):
         lr = {

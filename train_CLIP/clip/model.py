@@ -7,6 +7,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+import snoop
 
 class Bottleneck(nn.Module):
     expansion = 4
@@ -393,6 +394,12 @@ def convert_weights(model: nn.Module):
     model.apply(_convert_weights_to_fp16)
 
 
+def convert_models_to_fp32(model): 
+    for p in model.parameters(): 
+        p.data = p.data.float() 
+        p.grad.data = p.grad.data.float() 
+        
+
 def build_model(state_dict: dict):
     vit = "visual.proj" in state_dict
 
@@ -430,4 +437,5 @@ def build_model(state_dict: dict):
 
     convert_weights(model)
     model.load_state_dict(state_dict)
+    return model
     return model.eval()

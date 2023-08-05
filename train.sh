@@ -5,4 +5,5 @@ python train_CLIP/train.py \
         --batch_size 16 \
         --accelerator gpu \
         --num_workers 8 \
-        --max_steps 10000 
+        --max_steps 10000 \
+        --shuffle \
