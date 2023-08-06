@@ -51,7 +51,9 @@ $ unzip ${demo_file} -d data/
 Get a copy from: [Here](https://colab.research.google.com/drive/13QyNX2XlQkaO42m7yktEaXr9fZKKlYHB?authuser=2#scrollTo=oACMlxLku3uE)
 
 ## Training
-
+```
+$ ./train.sh
+```
 
 ## Deployment
 
