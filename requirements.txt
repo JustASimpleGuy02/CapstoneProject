@@ -5,7 +5,6 @@ PyQt5
 fastapi
 opencv-python-headless
 uvicorn
-fashion-clip
 snoop
 scikit-learn
 transformers

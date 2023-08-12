@@ -58,6 +58,11 @@ $ ./train.sh
 ## Deployment
 
 
+## For testing only
+```
+$ pip install fashion-clip
+```
+
 ## Reference
 
 ``` text
