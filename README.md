@@ -60,7 +60,7 @@ $ ./train.sh
 
 ## For testing only
 ```
-$ pip install fashion-clip
+$ pip install transformers fashion-clip
 ```
 
 ## Reference

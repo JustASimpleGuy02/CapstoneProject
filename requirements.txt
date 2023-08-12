@@ -7,7 +7,6 @@ opencv-python-headless
 uvicorn
 snoop
 scikit-learn
-transformers
 ftfy
 regex
 scikit-image
