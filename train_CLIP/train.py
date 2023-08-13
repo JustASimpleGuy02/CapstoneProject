@@ -4,7 +4,7 @@ import yaml
 from argparse import ArgumentParser
 from pytorch_lightning import Trainer
 from data.custom_text_image_dm import TextImageDataModule
-from clip import CLIPWrapper, SimpleCLIPWrapper, load
+from clip import *
 
 
 def main(hparams):
@@ -38,6 +38,7 @@ def main(hparams):
         max_epochs=32,
     )
     trainer.fit(model, dm)
+    trainer.save_checkpoint("best_model.ckpt")
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ regex
 scikit-image
 torch==1.13.1 
 torchvision==0.14.1
-pytorch_lightning==1.8.6
+pytorch_lightning==1.9.5
 git+https://github.com/katsura-jp/pytorch-cosine-annealing-with-warmup
 fastapi
 torchshow
