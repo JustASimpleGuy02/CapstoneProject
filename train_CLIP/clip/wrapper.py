@@ -18,7 +18,7 @@ class SimpleCLIPWrapper(pl.LightningModule):
         self,
         model_name: str,
         model: nn.Module,
-        config: dict,
+        # config: dict,
         minibatch_size: int,
     ):
         """A lightning wrapper for a CLIP model as specified in the paper.
@@ -144,7 +144,7 @@ class CLIPWrapper(pl.LightningModule):
         self,
         model_name: str,
         model: nn.Module,
-        config: dict,
+        # config: dict,
         minibatch_size: int,
     ):
         """A lightning wrapper for a CLIP model as specified in the paper.

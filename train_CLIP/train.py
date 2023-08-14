@@ -7,15 +7,34 @@ from data.custom_text_image_dm import TextImageDataModule
 from clip import *
 
 
-def main(hparams):
-    config_dir = (
-        "train_CLIP/clip/configs/ViT.yaml"
-        if "ViT" in hparams.model_name
-        else "train_CLIP/clip/configs/RN.yaml"
+def save_ckpt_to_onnx(trainer, model, model_name, device="cuda"):
+    model = CLIPWrapper.load_from_checkpoint(
+        trainer.checkpoint_callback.best_model_path,
+        model_name=model_name,
+        model=model,
+        minibatch_size=1,
+    ).model.to(device)
+    model.eval()
+    dummy_input_1 = torch.randn(1, 3, 224, 224).to(device)
+    dummy_input_2 = torch.randint(100, (1, 77)).to(device)
+    
+    torch.onnx.export(model,
+        args=(dummy_input_1, dummy_input_2),
+        f="fclip.onnx",
+        input_names=["input_image", "input_text"],
+        output_names=["output"]
     )
 
-    with open(config_dir) as fin:
-        config = yaml.safe_load(fin)[hparams.model_name]
+
+def main(hparams):
+    # config_dir = (
+    #    "train_CLIP/clip/configs/ViT.yaml"
+    #    if "ViT" in hparams.model_name
+    #    else "train_CLIP/clip/configs/RN.yaml"
+    #)
+
+    # with open(config_dir) as fin:
+    #    config = yaml.safe_load(fin)[hparams.model_name]
 
     if hparams.minibatch_size < 1:
         hparams.minibatch_size = hparams.batch_size
@@ -23,22 +42,19 @@ def main(hparams):
     ### Model
     model_name = hparams.model_name
     model, preprocess = load(model_name)
-    model = CLIPWrapper(model_name, model, config, hparams.minibatch_size)
-    del hparams.model_name, model_name
-    
+    trained_model = CLIPWrapper(model_name, model, hparams.minibatch_size)
+
     ### Data Loader
-    # dm = TextImageDataModule(preprocess=preprocess)
     dm = TextImageDataModule.from_argparse_args(hparams)
     dm.preprocess = preprocess
-    
+
     ### Trainer
     trainer = Trainer.from_argparse_args(
         hparams,
-        # precision=16,
-        max_epochs=32,
+        precision=16,
     )
-    trainer.fit(model, dm)
-    trainer.save_checkpoint("best_model.ckpt")
+    trainer.fit(trained_model, dm)
+    save_ckpt_to_onnx(trainer, model, model_name)
 
 
 if __name__ == "__main__":

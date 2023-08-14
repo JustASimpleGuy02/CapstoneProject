@@ -1,12 +1,15 @@
 import sys
 
 sys.path.append("train_CLIP")
+import os.path as osp
 from typing import List
 from glob import glob
 
+from tqdm import tqdm
 import numpy as np
 import cv2
 from PIL import Image
+import torch
 from clip import *
 
 CHECKPOINT = "../training_logs/2023_08_12/epoch=11-step=10000.ckpt"
@@ -14,12 +17,11 @@ MODEL_NAME = "RN50"
 CONFIG = "train_CLIP/clip/configs/RN.yaml"
 DEVICE = "cuda"
 
-model = load(MODEL_NAME)
+model, preprocess = load(MODEL_NAME)
 fclip = CLIPWrapper.load_from_checkpoint(
     CHECKPOINT,
     model_name=MODEL_NAME,
     model=model,
-    config=CONFIG,
     minibatch_size=1,
 ).model.to(DEVICE)
 
@@ -61,20 +63,35 @@ def search(
         np.ndarray: found image
         List[np.ndarray]: list of image embeddings for later use
     """
-    image_paths = sorted(glob(osp.join(image_dir, "*.jpg")))
-    text_embedding = fclip.encode_text([prompt], 32)[0]
+    image_paths = glob(osp.join(image_dir, "*.jpg"))
 
     if n_sample is None or n_sample > len(image_paths):
         n_sample = len(image_paths)
 
+    # Encoding images
     if image_embeddings is None:
-        image_embeddings = fclip.encode_images(
-            image_paths[:n_sample], batch_size=32
-        )
+        image_embeddings = []
+        for path in tqdm(image_paths[:n_sample]):
+            image = Image.open(path)
+            image_input = preprocess(image)[None, ...].cuda()
+            with torch.no_grad():
+                image_feature = fclip.encode_image(image_input).float()
+            image_embeddings.append(image_feature)
+        image_embeddings = torch.cat(image_embeddings)
+        image_embeddings /= image_embeddings.norm(dim=-1, keepdim=True)
 
-    id_of_matched_object = np.argmax(text_embedding.dot(image_embeddings.T))
+    # Encoding prompt
+    text_tokens = tokenize([prompt]).cuda()
+    with torch.no_grad():
+        text_embeddings = fclip.encode_text(text_tokens).float()
+
+    # Calculating similarity matrix
+    text_embeddings /= text_embeddings.norm(dim=-1, keepdim=True)
+    similarity = text_embeddings.cpu().numpy() @ image_embeddings.cpu().numpy().T
+
+    # Find most suitable image for the prompt
+    id_of_matched_object = np.argmax(similarity)
     found_image_path = image_paths[id_of_matched_object]
-
     image = load_image(found_image_path)
 
     return image, image_embeddings
@@ -82,9 +99,15 @@ def search(
 
 if __name__ == "__main__":
     image_dir = "data/demo/data_for_fashion_clip"
-    image, image_embeddings = search("black shirt", image_dir)
+    
+    image, image_embeddings = search("black shirt", image_dir, n_sample=1000)
+    cv2.imshow("Found Image", image)
+    cv2.waitKey(0)  
+    
     image, _ = search(
         "brown shorts", image_dir=image_dir, image_embeddings=image_embeddings
     )
     cv2.imshow("Found Image", image)
     cv2.waitKey(0)
+
+
