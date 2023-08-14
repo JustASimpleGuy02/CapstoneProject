@@ -191,6 +191,7 @@ class CLIPWrapper(pl.LightningModule):
     def training_step(self, train_batch, idx):
         # get optimizers and scheduler
         optimizer = self.optimizers()
+        lr_scheduler = self.lr_schedulers()
 
         image, text = train_batch
         n = math.ceil(len(image) // self.minibatch_size)
@@ -235,6 +236,7 @@ class CLIPWrapper(pl.LightningModule):
                 {
                     "loss": loss / len(ims),
                     "acc": (acc_i + acc_t) / 2 / len(image) / len(ims),
+                    "lr": lr_scheduler.get_lr()[0]
                 },
                 prog_bar=True,
             )
@@ -284,7 +286,6 @@ class CLIPWrapper(pl.LightningModule):
         # Mix-precision Training: https://github.com/openai/CLIP/issues/57
         model.convert_models_to_fp32(self.model)
         optimizer.step()
-        lr_scheduler = self.lr_schedulers()
         lr_scheduler.step()
         self.model.logit_scale.data.clamp_(-np.log(100), np.log(100))
         
