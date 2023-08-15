@@ -1,29 +1,8 @@
-import os
-import os.path as osp
-import yaml
 from argparse import ArgumentParser
 from pytorch_lightning import Trainer
 from data.custom_text_image_dm import TextImageDataModule
+from tools import torch2onnx
 from clip import *
-
-
-def save_ckpt_to_onnx(trainer, model, model_name, device="cuda"):
-    model = CLIPWrapper.load_from_checkpoint(
-        trainer.checkpoint_callback.best_model_path,
-        model_name=model_name,
-        model=model,
-        minibatch_size=1,
-    ).model.to(device)
-    model.eval()
-    dummy_input_1 = torch.randn(1, 3, 224, 224).to(device)
-    dummy_input_2 = torch.randint(100, (1, 77)).to(device)
-    
-    torch.onnx.export(model,
-        args=(dummy_input_1, dummy_input_2),
-        f="fclip.onnx",
-        input_names=["input_image", "input_text"],
-        output_names=["output"]
-    )
 
 
 def main(hparams):
@@ -31,7 +10,7 @@ def main(hparams):
     #    "train_CLIP/clip/configs/ViT.yaml"
     #    if "ViT" in hparams.model_name
     #    else "train_CLIP/clip/configs/RN.yaml"
-    #)
+    # )
 
     # with open(config_dir) as fin:
     #    config = yaml.safe_load(fin)[hparams.model_name]
@@ -54,7 +33,9 @@ def main(hparams):
         precision=16,
     )
     trainer.fit(trained_model, dm)
-    save_ckpt_to_onnx(trainer, model, model_name)
+    torch2onnx(
+        trainer.checkpoint_callback.best_model_path, model, model_name
+    )
 
 
 if __name__ == "__main__":
