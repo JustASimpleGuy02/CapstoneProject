@@ -34,7 +34,7 @@ def main(hparams):
     )
     trainer.fit(trained_model, dm)
     torch2onnx(
-        trainer.checkpoint_callback.best_model_path, model, model_name
+        trainer.checkpoint_callback.best_model_path, model_name
     )
 
 

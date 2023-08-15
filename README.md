@@ -55,12 +55,15 @@ Get a copy from: [Here](https://colab.research.google.com/drive/13QyNX2XlQkaO42m
 $ ./train.sh
 ```
 
-## Deployment
+## Pretrained Model
 
+## Image Data Embeddings
 
-## For testing only
+Download image embeddings data from [link](https://drive.google.com/file/d/1MQ5ApmsFc7yGk2eyNdvLJco6RaTDSuhJ/view?usp=drive_link)
+
+## Try your Prompt
 ```
-$ pip install transformers fashion-clip
+$ python apis/search_item.py ${YOUR PROMPT}
 ```
 
 ## Reference
