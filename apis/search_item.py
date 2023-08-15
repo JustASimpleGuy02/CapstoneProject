@@ -12,7 +12,7 @@ import cv2
 from PIL import Image
 import torch
 from clip import *
-from tools import load_checkpoint
+from tools import load_model
 
 
 def load_image(
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     # model_path = "../training_logs/2023_08_12/epoch=11-step=10000.ckpt"
     model_name = "RN50"
 
-    model, preprocess = load_checkpoint(model_path, model_name)
+    model, preprocess = load_model(model_path, model_name)
     image_paths = sorted(glob(osp.join(image_dir, "*.jpg")))
     image_embeddings = np.loadtxt("image_embeddings_demo.txt")
 
