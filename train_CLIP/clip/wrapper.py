@@ -9,7 +9,6 @@ from cosine_annealing_warmup import CosineAnnealingWarmupRestarts
 
 from . import clip, model
 import numpy as np
-import snoop
 from icecream import ic
 
 
@@ -61,7 +60,7 @@ class SimpleCLIPWrapper(pl.LightningModule):
     # Mini-batching thanks to https://github.com/crowsonkb / https://twitter.com/RiversHaveWings
     # Multi-GPU support: https://github.com/MicPie/clasp
     def training_step(self, train_batch, idx):
-        
+
         # get optimizers and scheduler
         optimizer = self.optimizers()
 

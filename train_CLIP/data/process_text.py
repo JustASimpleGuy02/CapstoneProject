@@ -29,3 +29,10 @@ def remove_unwant_spaces(text: str):
     
     result = re.sub('\s+',' ', result)
     return result
+
+
+def replace_punctuation_with_whitespace(input_string):
+    translation_table = str.maketrans(string.punctuation, ' ' * len(string.punctuation))
+    modified_string = input_string.translate(translation_table)
+    
+    return modified_string

@@ -12,7 +12,7 @@ from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision import transforms as T
 from pytorch_lightning import LightningDataModule
 
-from data import process_text
+from data.process_text import *
 from clip import tokenize
 
 
@@ -131,7 +131,12 @@ class TextImageDataset(Dataset):
         """
         if self.filter_description:
             description = metadata.get("description", "").lower()
-            processed_metadata = description
+
+            title = metadata.get("title", "untitled").lower()
+            if title == "untitled":
+                title = ""
+            
+            processed_metadata = title + " " + description            
         else:
             url_name = metadata.get("url_name", "untitled").lower()
             if url_name == "untitled":
@@ -167,9 +172,10 @@ class TextImageDataset(Dataset):
                 + semantic_category
             )
 
-        processed_metadata = process_text.remove_punctuation(processed_metadata)
-
-        processed_metadata = process_text.remove_unwant_spaces(processed_metadata)
+        # processed_metadata = process_text.remove_punctuation(processed_metadata)
+        processed_metadata = replace_punctuation_with_whitespace(processed_metadata)
+        
+        processed_metadata = remove_unwant_spaces(processed_metadata)
 
         return processed_metadata
 
@@ -305,6 +311,7 @@ class TextImageDataModule(LightningDataModule):
             filter_description=self.filter_description,
             preprocess=self.preprocess,
         )
+    
         n_train = int(len(dataset) * 0.8)
         n_val = len(dataset) - n_train
         self.train_dataset, self.val_dataset = random_split(dataset, [n_train, n_val])

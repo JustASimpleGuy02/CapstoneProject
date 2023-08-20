@@ -103,8 +103,8 @@ if __name__ == "__main__":
     prompt = args.prompt 
     
     image_dir = "data/demo/data_for_fashion_clip"
-    model_path = "../training_logs/2023_08_14/epoch=50-step=45951.ckpt"
-    # model_path = "../training_logs/2023_08_12/epoch=11-step=10000.ckpt"
+    # model_path = "../training_logs/2023_08_14/epoch=50-step=45951.ckpt"
+    model_path = "../training_logs/2023_08_12/epoch=11-step=10000.ckpt"
     model_name = "RN50"
 
     model, preprocess = load_model(model_path, model_name)
