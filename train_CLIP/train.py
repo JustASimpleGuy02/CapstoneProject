@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from pytorch_lightning import Trainer
 from data.custom_text_image_dm import TextImageDataModule
-from tools import torch2onnx
+# from tools import torch2onnx
 from clip import *
 
 
@@ -33,9 +33,9 @@ def main(hparams):
         precision=16,
     )
     trainer.fit(trained_model, dm)
-    torch2onnx(
-        trainer.checkpoint_callback.best_model_path, model_name
-    )
+    # torch2onnx(
+    #     trainer.checkpoint_callback.best_model_path, model_name
+    # )
 
 
 if __name__ == "__main__":
