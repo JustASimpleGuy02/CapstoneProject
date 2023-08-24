@@ -135,8 +135,8 @@ class TextImageDataset(Dataset):
             title = metadata.get("title", "untitled").lower()
             if title == "untitled":
                 title = ""
-            
-            processed_metadata = title + " " + description            
+
+            processed_metadata = title + " " + description
         else:
             url_name = metadata.get("url_name", "untitled").lower()
             if url_name == "untitled":
@@ -173,8 +173,10 @@ class TextImageDataset(Dataset):
             )
 
         # processed_metadata = process_text.remove_punctuation(processed_metadata)
-        processed_metadata = replace_punctuation_with_whitespace(processed_metadata)
-        
+        processed_metadata = replace_punctuation_with_whitespace(
+            processed_metadata
+        )
+
         processed_metadata = remove_unwant_spaces(processed_metadata)
 
         return processed_metadata
@@ -192,14 +194,18 @@ class TextImageDataset(Dataset):
 
         image_fullpath = self.image_fullpaths[index]
         image = Image.open(image_fullpath)
-        image_tensor = self.image_transform(image) if self.image_transform else image
+        image_tensor = (
+            self.image_transform(image) if self.image_transform else image
+        )
 
         image_name = os.path.basename(image_fullpath)
         item_id = os.path.splitext(image_name)[0]
         item_metadata = self.process_metadata(self.metadatas[item_id])
 
         tokenized_text = (
-            item_metadata if self.custom_tokenizer else tokenize(item_metadata)[0]
+            item_metadata
+            if self.custom_tokenizer
+            else tokenize(item_metadata)[0]
         )
 
         return image_tensor, tokenized_text
@@ -264,7 +270,9 @@ class TextImageDataModule(LightningDataModule):
 
     @staticmethod
     def add_argparse_args(parent_parser):
-        parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False)
+        parser = argparse.ArgumentParser(
+            parents=[parent_parser], add_help=False
+        )
         parser.add_argument(
             "--folder",
             type=str,
@@ -311,10 +319,12 @@ class TextImageDataModule(LightningDataModule):
             filter_description=self.filter_description,
             preprocess=self.preprocess,
         )
-    
+
         n_train = int(len(dataset) * 0.8)
         n_val = len(dataset) - n_train
-        self.train_dataset, self.val_dataset = random_split(dataset, [n_train, n_val])
+        self.train_dataset, self.val_dataset = random_split(
+            dataset, [n_train, n_val]
+        )
 
     def train_dataloader(self):
         return DataLoader(
@@ -325,7 +335,7 @@ class TextImageDataModule(LightningDataModule):
             drop_last=True,
             collate_fn=self.dl_collate_fn,
         )
-        
+
     def val_dataloader(self):
         return DataLoader(
             self.val_dataset,
@@ -342,7 +352,9 @@ class TextImageDataModule(LightningDataModule):
                 [row[1] for row in batch]
             )
         else:
-            return torch.stack([row[0] for row in batch]), self.custom_tokenizer(
+            return torch.stack(
+                [row[0] for row in batch]
+            ), self.custom_tokenizer(
                 [row[1] for row in batch],
                 padding=True,
                 truncation=True,

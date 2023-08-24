@@ -15,7 +15,7 @@ import torch
 from clip import *
 
 # %%
-model_path = "../../training_logs/2023_08_14/epoch=50-step=45951.ckpt"
+model_path = "../../training_logs/2023_08_21/epoch=47-step=43248.ckpt"
 model_name = "RN50"
 model, preprocess = load_model(model_path, model_name)
 
@@ -24,7 +24,7 @@ ds = TextImageDataset(data_dir="/home/dungmaster/Projects/CapstoneProject/data",
                     custom_tokenizer=True)
 
 # %%
-n = 200
+n = 1000
 test_data = [ds[idx] for idx in range(n)]
 len(test_data)
 # %%
@@ -121,7 +121,7 @@ for col in range(n_cols):
     print(f"Text of item index 24:", texts[24])
 
 # %%
-prompt = "a pair of pink shorts"
+prompt = "orange shirt"
 text_tokens = tokenize([prompt]).cuda()
 with torch.no_grad():
     text_embedding = model.encode_text(text_tokens).float()
@@ -134,5 +134,6 @@ similarity = text_embedding @ image_embeddings.T
 
 # Find most suitable image for the prompt
 id_of_matched_object = np.argmax(similarity)
+print(texts[id_of_matched_object])
 images[id_of_matched_object]
 # %%
