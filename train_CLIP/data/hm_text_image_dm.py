@@ -92,7 +92,7 @@ class TextImageDataset(Dataset):
         self.subset = subset[
             subset["product_type_name"].isin(most_frequent_product_types)
         ]
-        del self.subset
+        del self.metadata
 
     def fix_img(self, img):
         return img.convert("RGB") if img.mode != "RGB" else img

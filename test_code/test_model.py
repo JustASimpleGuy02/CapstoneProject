@@ -3,7 +3,7 @@ import sys
 sys.path.append("/home/dungmaster/Projects/CapstoneProject")
 sys.path.append("/home/dungmaster/Projects/CapstoneProject/train_CLIP")
 # %%
-from data.custom_text_image_dm import TextImageDataset
+from data.polyvore_text_image_dm import TextImageDataset
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
@@ -116,12 +116,10 @@ for col in range(n_cols):
     ax[1, col].set_yticks([], [])
     ax[1, col].grid(False)
     ax[1, col].set_xlabel(text, fontsize=10)
-    # %%
-    print(f"Text of item index 0:", texts[0])
-    print(f"Text of item index 24:", texts[24])
 
 # %%
-prompt = "orange shirt"
+prompt = "Oversized White Blouse: Steffen Schraut's trendy white blouse. Boyfriend cut, stretchy cotton blend. Shirt collar, breast pocket, rounded hem with slits, back box pleat. Super laid-back and stylish. 60% cotton, 35% poly, 5% elastane. True to size. Hand wash. Model 178cm, size 36."
+
 text_tokens = tokenize([prompt]).cuda()
 with torch.no_grad():
     text_embedding = model.encode_text(text_tokens).float()
@@ -136,4 +134,6 @@ similarity = text_embedding @ image_embeddings.T
 id_of_matched_object = np.argmax(similarity)
 print(texts[id_of_matched_object])
 images[id_of_matched_object]
+# %%
+text_embedding.shape
 # %%
