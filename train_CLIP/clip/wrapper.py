@@ -60,7 +60,6 @@ class SimpleCLIPWrapper(pl.LightningModule):
     # Mini-batching thanks to https://github.com/crowsonkb / https://twitter.com/RiversHaveWings
     # Multi-GPU support: https://github.com/MicPie/clasp
     def training_step(self, train_batch, idx):
-
         # get optimizers and scheduler
         optimizer = self.optimizers()
 
@@ -68,14 +67,19 @@ class SimpleCLIPWrapper(pl.LightningModule):
 
         image_logits, text_logits = self.model(images, texts)
 
-        ground_truth = torch.arange(len(images),dtype=torch.long).to(image_logits.device)
+        ground_truth = torch.arange(len(images), dtype=torch.long).to(
+            image_logits.device
+        )
 
-        total_loss = (F.cross_entropy(image_logits,ground_truth) + F.cross_entropy(text_logits,ground_truth))/2
+        total_loss = (
+            F.cross_entropy(image_logits, ground_truth)
+            + F.cross_entropy(text_logits, ground_truth)
+        ) / 2
         total_loss.backward()
-        
+
         acc_i = (torch.argmax(image_logits, 1) == ground_truth).sum()
         acc_t = (torch.argmax(image_logits, 0) == ground_truth).sum()
-        
+
         self.log_dict(
             {
                 "loss": total_loss / len(images),
@@ -90,7 +94,7 @@ class SimpleCLIPWrapper(pl.LightningModule):
         lr_scheduler = self.lr_schedulers()
         lr_scheduler.step()
         self.model.logit_scale.data.clamp_(-np.log(100), np.log(100))
-        
+
         model.convert_weights(self.model)
 
     def validation_step(self, val_batch, idx):
@@ -235,7 +239,7 @@ class CLIPWrapper(pl.LightningModule):
                 {
                     "loss": loss / len(ims),
                     "acc": (acc_i + acc_t) / 2 / len(image) / len(ims),
-                    "lr": lr_scheduler.get_lr()[0]
+                    "lr": lr_scheduler.get_lr()[0],
                 },
                 prog_bar=True,
             )
@@ -262,7 +266,7 @@ class CLIPWrapper(pl.LightningModule):
                 F.cross_entropy(image_logits, ground_truth)
                 + F.cross_entropy(image_logits.t(), ground_truth)
             ) / 2
-            
+
             self.manual_backward(loss)
 
         # text loss
@@ -287,7 +291,7 @@ class CLIPWrapper(pl.LightningModule):
         optimizer.step()
         lr_scheduler.step()
         self.model.logit_scale.data.clamp_(-np.log(100), np.log(100))
-        
+
         model.convert_weights(self.model)
 
     def validation_step(self, val_batch, idx):

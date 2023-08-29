@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from pytorch_lightning import Trainer
 from data.polyvore_text_image_dm import TextImageDataModule
+
 # from tools import torch2onnx
 from clip import *
 
@@ -25,7 +26,7 @@ def main(hparams):
 
     ### Data Loader
     dm = TextImageDataModule.from_argparse_args(hparams)
-    dm.preprocess = preprocess
+    dm.image_transform = preprocess
 
     ### Trainer
     trainer = Trainer.from_argparse_args(
