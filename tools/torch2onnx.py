@@ -1,6 +1,6 @@
 import sys
 from argparse import ArgumentParser
-from .utils import *
+from .model import *
 
 
 def torch2onnx(model_path, model_name, device="cuda"):

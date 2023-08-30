@@ -6,7 +6,7 @@ import os
 import os.path as osp
 
 # %%
-from data.polyvore_text_image_dm import TextImageDataset
+from data.old_polyvore_text_image_dm import TextImageDataset
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
@@ -18,26 +18,23 @@ import torch
 from clip import *
 
 # %%
-model_path = "../../training_logs/2023_08_29/epoch=14-step=44000.ckpt"
+model_path = "../../training_logs/2023_08_21/epoch=47-step=43248.ckpt"
 model_name = "RN50"
 model, preprocess = load_model(model_path, model_name)
 
 # %%
 ds = TextImageDataset(data_dir="/home/dungmaster/Projects/CapstoneProject/data",
-                      csv_metadata="../data/polyvore_img_desc.csv",
                       custom_tokenizer=True)
 
 # %%
 n = 1000
 test_data = [ds[idx] for idx in range(n)]
 len(test_data)
-
 # %%
 images, texts = tuple(zip(*test_data))
 len(images)
-
 # %%
-saved_image_embedding = "../model_embeddings/2023_08_29/image_embeddings_test.txt"
+saved_image_embedding = "../model_embeddings/2023_08_21/image_embeddings_test.txt"
 
 if osp.isfile(saved_image_embedding):
     image_embeddings = np.loadtxt(saved_image_embedding)
@@ -55,7 +52,7 @@ else:
     np.savetxt(saved_image_embedding, image_embeddings)
 
 # %%
-saved_text_embedding = "../model_embeddings/2023_08_29/text_embeddings_test.txt"
+saved_text_embedding = "../model_embeddings/2023_08_21/text_embeddings_test.txt"
 
 if osp.isfile(saved_text_embedding):
     text_embeddings = np.loadtxt(saved_text_embedding)
@@ -138,9 +135,22 @@ for col in range(n_cols):
     ax[1, col].set_xlabel(text, fontsize=10)
 
 # %%
-prompt = "black and white striped shirt"
+prompt = "pink t shirt"
 
-#TODO: use search function from apis package
+text_tokens = tokenize([prompt]).cuda()
+with torch.no_grad():
+    text_embedding = model.encode_text(text_tokens).float()
+
+text_embedding /= text_embedding.norm(dim=-1, keepdim=True)
+text_embedding = text_embedding.cpu().numpy()
+
+# Calculate cosine similarity matrix
+similarity = text_embedding @ image_embeddings.T
+
+# Find most suitable image for the prompt
+id_of_matched_object = np.argmax(similarity)
+print(texts[id_of_matched_object])
+images[id_of_matched_object]
 
 # %%
 text_embedding.shape

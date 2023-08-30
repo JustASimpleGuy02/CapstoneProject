@@ -84,6 +84,7 @@ def search(
     # Calculating cosine similarity matrix
     similarity = text_embeddings @ image_embeddings.T
 
+    #TODO: implement search top k
     # Find most suitable image for the prompt
     id_of_matched_object = np.argmax(similarity)
     found_image_path = image_paths[id_of_matched_object]

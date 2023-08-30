@@ -1,5 +1,4 @@
 # %%
-import os
 import os.path as osp
 from tqdm import tqdm
 
@@ -74,7 +73,7 @@ def remove_urls_or_domain_names(text):
 
 
 def remove_special_characters(text):
-    cleaned_text = re.sub(r'\uFF5C', ' ', text)
+    cleaned_text = re.sub(r"\uFF5C", " ", text)
 
     return cleaned_text
 
@@ -89,7 +88,7 @@ def clean(text: str):
     text = replace_punctuation_with_whitespace(text)
 
     text = remove_unwanted_spaces(text)
-    
+
     return text
 
 
@@ -123,19 +122,25 @@ chosen_prompts["final_title"] = full_titles
 chosen_prompts.head(20)
 
 # %%
-chosen_prompts.drop(["category_id", "semantic_category", "tmp"], axis=1, inplace=True)
+chosen_prompts.drop(
+    ["category_id", "semantic_category", "tmp"], axis=1, inplace=True
+)
 
 # %%
 chosen_prompts["tmp"] = chosen_prompts["final_title"].progress_apply(clean)
 chosen_prompts.head(20)
 
 # %%
-chosen_prompts.drop(["url_name", "title", "category", "final_title"], axis=1, inplace=True)
+chosen_prompts.drop(
+    ["url_name", "title", "category", "final_title"], axis=1, inplace=True
+)
 chosen_prompts.rename(columns={"tmp": "final_title"}, inplace=True)
 chosen_prompts.head(20)
 
 # %%
-chosen_prompts["image_name"] = chosen_prompts["id"].progress_apply(lambda x: str(x) + ".jpg")
+chosen_prompts["image_name"] = chosen_prompts["id"].progress_apply(
+    lambda x: str(x) + ".jpg"
+)
 chosen_prompts.head(20)
 
 # %%

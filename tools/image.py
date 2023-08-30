@@ -46,8 +46,15 @@ def display_image_with_desc_grid(
                 if j > 0 and j % 4 == 0:
                     desc_list[j] = desc_list[j] + '\n'
             text = ' '.join(desc_list)
-            ax[row, col].imshow(image)
-            ax[row, col].set_xticks([], [])
-            ax[row, col].set_yticks([], [])
-            ax[row, col].grid(False)
-            ax[row, col].set_xlabel(text, fontsize=10)
+            if n_rows == 1:
+                ax[col].imshow(image)
+                ax[col].set_xticks([], [])
+                ax[col].set_yticks([], [])
+                ax[col].grid(False)
+                ax[col].set_xlabel(text, fontsize=10)
+            else:
+                ax[row, col].imshow(image)
+                ax[row, col].set_xticks([], [])
+                ax[row, col].set_yticks([], [])
+                ax[row, col].grid(False)
+                ax[row, col].set_xlabel(text, fontsize=10)

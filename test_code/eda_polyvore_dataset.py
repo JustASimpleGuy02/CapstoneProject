@@ -1,44 +1,48 @@
 # %%
 import os
-import sys
 import os.path as osp
-sys.path.append(osp.dirname(os.getcwd())) # append parent directory
-import random
-from tools import *
+import sys
+sys.path += ["../train_CLIP", ".."]
 
-import cv2
-import pandas as pd
-import polars as pl
+from data.old_polyvore_text_image_dm import TextImageDataset
+from clip.simple_tokenizer import SimpleTokenizer
+from clip.clip import tokenize
+from tools import *
+import matplotlib.pyplot as plt
+import numpy as np
+from tqdm import tqdm
+import random
 
 # %%
 data_dir = "../data"
 image_dir = osp.join(data_dir, "images")
-image_desc_file = osp.join(data_dir, "polyvore_img_desc.csv")
+metadata_file = osp.join(data_dir, "polyvore_item_metadata.json")
 
 # %%
-df = pl.read_csv(image_desc_file)
-text, image = df[12]
-text, image = text.item(), image.item()
+metadatas = load_json(metadata_file)
+item_ids = list(metadatas.keys())
 
 # %%
-text, image
-
-# %%
-n_sample = 20
-random_indices = [random.randint(0, len(df)-1) for _ in range(n_sample)]
-random_indices
+n_sample = 5
 
 # %%
 img_desc_pairs = []
+count = 0
 
-for idx in random_indices:
-    text, image = df[idx]
-    image_path = osp.join(image_dir, image.item())
+while count < n_sample:
+    item_id = random.sample(item_ids, 1)[0]
+    metadata = metadatas[item_id]
+    title = metadata.get("title", "")
+    description = metadata.get("description", "")
+    if len(description) == 0:
+        continue
+    image_name = item_id + ".jpg"
+    image_path = osp.join(image_dir, image_name)
     image = load_image(image_path)
-    img_desc_pairs.append((image, text.item()))
-    
-# %%
-display_image_with_desc_grid(img_desc_pairs, n_sample, n_rows=4)
+    desc = f"Title: {title}\nDescription: {description}"
+    img_desc_pairs.append((image, desc))
+    count += 1
+
+display_image_with_desc_grid(img_desc_pairs, n_sample, n_rows=1)
 
 # %%
-len(df)
