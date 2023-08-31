@@ -17,6 +17,11 @@ def remove_punctuation(text: str):
     return result
 
 
+# TODO: implement removing stopword function
+def remove_stopwords(text: str):
+    return text
+
+
 def replace_punctuation_with_whitespace(input_string):
     translation_table = str.maketrans(
         string.punctuation, " " * len(string.punctuation)

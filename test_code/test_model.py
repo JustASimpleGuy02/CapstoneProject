@@ -1,19 +1,20 @@
 # %%
 import sys
-sys.path.append("/home/dungmaster/Projects/CapstoneProject")
-sys.path.append("/home/dungmaster/Projects/CapstoneProject/train_CLIP")
+sys.path += ["..", "../train_CLIP"]
 import os
 import os.path as osp
+from glob import glob
+from tqdm import tqdm
+import random
 
 # %%
 from data.polyvore_text_image_dm import TextImageDataset
 import matplotlib.pyplot as plt
 import numpy as np
-from tqdm import tqdm
-import random
 
 # %%
-from tools import load_model
+from apis import search
+from tools import *
 import torch
 from clip import *
 
@@ -137,12 +138,34 @@ for col in range(n_cols):
     ax[1, col].grid(False)
     ax[1, col].set_xlabel(text, fontsize=10)
 
+### Test on H&M Dataset
 # %%
-prompt = "black and white striped shirt"
+data_dir = "../data"
+image_dir = osp.join(data_dir, "fashion_items_test")
+embeddings_file = "../model_embeddings/2023_08_29/image_embeddings_demo.txt"
 
-#TODO: use search function from apis package
+image_paths = glob(osp.join(image_dir, "*.jpg"))
+image_embeddings = np.loadtxt(embeddings_file)
 
-# %%
-text_embedding.shape
+prompts = ["red shirt", "pink short", "white sneaker", "round sunglasses", "golden ring"]
+topk_matched_images = []
+
+for prompt in prompts:
+    found_image_paths, _  = search(
+        model,
+        preprocess,
+        prompt=prompt,
+        image_paths=image_paths,
+        image_embeddings=image_embeddings,
+        top_k=5,
+    )
+    images = [load_image(path, backend="pillow", toRGB=False)
+              for path in found_image_paths]
+    topk_matched_images.append(images)
+
+display_image_sets(
+    images=topk_matched_images,
+    set_titles=prompts
+)
 
 # %%

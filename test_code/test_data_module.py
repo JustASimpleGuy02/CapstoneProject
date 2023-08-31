@@ -18,13 +18,6 @@ ds = TextImageDataset(
 )
 
 # %%
-count_long_text = 0
-for image, text in tqdm(ds):
-    if len(text) > 77:
-        count_long_text += 1
-count_long_text
-        
-# %%
 n_sample = 10
 
 n_rows = 2
@@ -38,7 +31,7 @@ for row in range(n_rows):
         image, text = ds[idx]
         desc_list = text.split(' ')
         for j, elem in enumerate(desc_list):
-            if j > 0 and j % 5 == 0:
+            if j > 0 and j % 4 == 0:
                 desc_list[j] = desc_list[j] + '\n'
         text = ' '.join(desc_list)
         ax[row, col].imshow(image)
@@ -47,6 +40,13 @@ for row in range(n_rows):
         ax[row, col].grid(False)
         ax[row, col].set_xlabel(text, fontsize=10)
 
+# %%
+count_long_text = 0
+for image, text in tqdm(ds):
+    if len(text) > 77:
+        count_long_text += 1
+count_long_text
+        
 # %%
 _tokenizer = SimpleTokenizer()
 

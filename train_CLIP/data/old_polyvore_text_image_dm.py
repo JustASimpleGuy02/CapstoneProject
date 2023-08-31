@@ -25,7 +25,8 @@ class TextImageDataset(Dataset):
         shuffle=False,
         custom_tokenizer=False,
         filter_description=True,
-        preprocess=None,
+        image_preprocess=None,
+        text_preprocess=None
     ):
         """Create a text image dataset
 
@@ -36,7 +37,8 @@ class TextImageDataset(Dataset):
             shuffle (bool, optional): Whether or not to have shuffling behavior during sampling. Defaults to False.
             custom_tokenizer (bool, optional): Whether or not there is a custom tokenizer. Defaults to False.
             filter_description (bool, optional): Use only description as text. Defaults to True.
-            preprocess (bool, optional): image transformation funcion
+            image_preprocess (bool, optional): image transformation funcion
+            text_preprocess (bool, optional): text transformation function
         """
         super().__init__()
 
@@ -58,7 +60,7 @@ class TextImageDataset(Dataset):
 
         self.resize_ratio = resize_ratio
 
-        # self.image_transform = T.Compose(
+        # self.image_preprocess = T.Compose(
         #     [
         #         T.Lambda(self.fix_img),
         #         T.RandomResizedCrop(
@@ -73,7 +75,8 @@ class TextImageDataset(Dataset):
         #         ),
         #     ]
         # )
-        self.image_transform = preprocess
+        self.image_preprocess = image_preprocess
+        self.text_preprocess = text_preprocess
 
         self.custom_tokenizer = custom_tokenizer
 
@@ -172,11 +175,14 @@ class TextImageDataset(Dataset):
                 + semantic_category
             )
 
-        # processed_metadata = process_text.remove_punctuation(processed_metadata)
-        processed_metadata = replace_punctuation_with_whitespace(
-            processed_metadata
-        )
-
+        # Advanced text process
+        if self.text_preprocess:
+            processed_metadata = replace_punctuation_with_whitespace(
+                processed_metadata
+            )
+            
+        processed_metadata = remove_stopwords(processed_metadata)
+            
         processed_metadata = remove_unwanted_spaces(processed_metadata)
 
         return processed_metadata
@@ -195,7 +201,7 @@ class TextImageDataset(Dataset):
         image_fullpath = self.image_fullpaths[index]
         image = Image.open(image_fullpath)
         image_tensor = (
-            self.image_transform(image) if self.image_transform else image
+            self.image_preprocess(image) if self.image_preprocess else image
         )
 
         image_name = os.path.basename(image_fullpath)
@@ -242,7 +248,8 @@ class TextImageDataModule(LightningDataModule):
         shuffle=False,
         custom_tokenizer=None,
         filter_description=True,
-        preprocess=None,
+        image_preprocess=None,
+        text_preprocess=None
     ):
         """Create a text image datamodule from directories with congruent text and image names.
 
@@ -255,7 +262,8 @@ class TextImageDataModule(LightningDataModule):
             shuffle (bool, optional): Whether or not to have shuffling behavior during sampling. Defaults to False.
             custom_tokenizer (transformers.AutoTokenizer, optional): The tokenizer to use on the text. Defaults to None.
             filter_description (bool, optional): Use only description as text. Defaults to True.
-            preprocess (bool, optional): image transformation funcion
+            image_preprocess (bool, optional): image transformation funcion
+            text_preprocess (bool, optional): text transformation function
         """
         super().__init__()
         self.folder = folder
@@ -266,7 +274,8 @@ class TextImageDataModule(LightningDataModule):
         self.shuffle = shuffle
         self.custom_tokenizer = custom_tokenizer
         self.filter_description = filter_description
-        self.preprocess = preprocess
+        self.image_preprocess = image_preprocess
+        self.text_preprocess = text_preprocess
 
     @staticmethod
     def add_argparse_args(parent_parser):
@@ -307,6 +316,12 @@ class TextImageDataModule(LightningDataModule):
             default=True,
             help="Use only description as text",
         )
+        parser.add_argument(
+            "--text-preprocess",
+            type=bool,
+            default=False,
+            help="Use text preprocess like removing punctuations, stopwords",
+        )        
         return parser
 
     def setup(self, stage=None):
@@ -317,7 +332,8 @@ class TextImageDataModule(LightningDataModule):
             shuffle=self.shuffle,
             custom_tokenizer=not self.custom_tokenizer is None,
             filter_description=self.filter_description,
-            preprocess=self.preprocess,
+            image_preprocess=self.image_preprocess,
+            text_preprocess=self.text_preprocess
         )
 
         n_train = int(len(dataset) * 0.8)
