@@ -1,0 +1,6 @@
+data/*
+# App/*
+model/*
+user_items/*
+__pycache__/
+*.pyc
