@@ -1,8 +1,10 @@
 import sys
 sys.path.append("train_CLIP")
 from argparse import ArgumentParser
+import os
 import os.path as osp
-from typing import List, Any
+from pathlib import Path
+from typing import List
 from glob import glob
 import random
 import time
@@ -12,13 +14,11 @@ import numpy as np
 import cv2
 from PIL import Image
 import torch
-from clip import *
-from tools import load_model
+from fashion_clip.fashion_clip import FashionCLIP
 from tools import *
 
 def search(
-    model: Any,
-    preprocess: Any,
+    model,
     prompt: str,
     image_paths: List[str],
     embeddings_file: str = None,
@@ -26,52 +26,38 @@ def search(
     n_sample: int = None,
     top_k: int = 5,
     save_embeddings: bool = False,
+    batch_size: int = 64
 ):
     """Search top images predicted by the model according to prompt
 
     Args:
-        model (Any): the pretrained model 
-        process (Any): the text preprocess function
+        model (Any): the pretrained model
         prompt (str): input prompt to search for fashion item
         image_paths (List[str]): list of absolute paths to item images
         embeddings_file (str): absolute or relative path to image embeddings file
         image_embeddings (List[np.ndarray], optional): embedding vectors of all the images. Defaults to None.
         top_k (int): number of best images to choose
         n_sample (int): number of images to test if there are so many images
+        batch_size (int): number of items in a batch to process
 
     Returns:
         List[str]: list of result image paths
         List[np.ndarray]: list of image embeddings for later use
     """
+    text_embedding = model.encode_text([prompt], batch_size)[0]
+
     if n_sample is None or n_sample > len(image_paths):
         n_sample = len(image_paths)
 
-    # Encoding images
     if image_embeddings is None:
-        image_embeddings = []
-        for path in tqdm(image_paths[:n_sample]):
-            image = Image.open(path)
-            image_input = preprocess(image)[None, ...].cuda()
-            with torch.no_grad():
-                image_feature = model.encode_image(image_input).float()
-            image_embeddings.append(image_feature)
-        image_embeddings = torch.cat(image_embeddings)
-        image_embeddings /= image_embeddings.norm(dim=-1, keepdim=True)
-        image_embeddings = image_embeddings.cpu().numpy()
+        image_embeddings = model.encode_images(image_paths[:n_sample], batch_size=batch_size)
 
     if save_embeddings:
         print("Save image embeddings...")
         np.savetxt(embeddings_file, image_embeddings)
+        
+    similarity = text_embedding.dot(image_embeddings.T)
 
-    # Encoding prompt
-    text_tokens = tokenize([prompt]).cuda()
-    with torch.no_grad():
-        text_embeddings = model.encode_text(text_tokens).float()
-    text_embeddings /= text_embeddings.norm(dim=-1, keepdim=True)
-    text_embeddings = text_embeddings.cpu().numpy()
-
-    # Calculating cosine similarity matrix
-    similarity = text_embeddings @ image_embeddings.T
     if len(similarity.shape) > 1:
         similarity = np.squeeze(similarity)
 
@@ -85,8 +71,6 @@ def search(
 def parse_args():
     parser = ArgumentParser(description="Search fashion item using prompt")
     parser.add_argument("--image-dir", help="image data to search from")
-    parser.add_argument("--model-name", help="name of the model")
-    parser.add_argument("--model-path", help="absolute or relative path to model")
     parser.add_argument("--prompt", help="prompt to search item")
     parser.add_argument("-k", "--top-k", type=int, help="number of best items to choose", default=1)
     parser.add_argument("--embeddings-file", help="file to load and save image embeddings")
@@ -94,19 +78,15 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-
-if __name__ == "__main__":
-    args = parse_args()
+def main(args):
     prompt = args.prompt 
     image_dir = args.image_dir
-    model_name = args.model_name
-    model_path = args.model_path
     top_k = args.top_k
     embeddings_file = args.embeddings_file
     save_embeddings = args.save_embeddings
 
     print("Loading model...")
-    model, preprocess = load_model(model_path, model_name)
+    fclip = FashionCLIP('fashion-clip')
     image_paths = sorted(glob(osp.join(image_dir, "*.jpg")))
     assert len(image_paths) > 0, f"Directory {image_dir} does not have any .jpg images"
 
@@ -117,12 +97,13 @@ if __name__ == "__main__":
         image_embeddings = np.loadtxt(embeddings_file)
     else:
         print("Embedding file does not exist. Process the images and save embeddings!")
+        embeddings_dir = osp.dirname(embeddings_file)
+        os.makedirs(embeddings_dir, exist_ok=True)
         save_embeddings = True
 
     t1 = time.time()
     found_image_paths, image_embeddings = search(
-        model,
-        preprocess,
+        fclip,
         prompt=prompt,
         image_paths=image_paths,
         embeddings_file=embeddings_file,
@@ -133,10 +114,14 @@ if __name__ == "__main__":
     t2 = time.time()
     print(f"Time: {t2-t1}s")
     
-    images = [load_image(path, toRGB=False) for path in found_image_paths]
+    images = [load_image(path, backend="pillow") for path in found_image_paths]
     display_image_sets(
         images=[images],
-        set_titles=[prompt]
+        set_titles=[prompt],
+        figsize=(20, 20)
     )
     print("Done!!!")
     
+if __name__ == "__main__":
+    args = parse_args()
+    main(args)

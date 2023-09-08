@@ -1,3 +1,4 @@
+fashion-clip
 matplotlib
 ipykernel
 tqdm
@@ -19,3 +20,5 @@ torchshow
 icecream
 tensorboard
 polars
+nltk
+h5py

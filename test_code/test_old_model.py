@@ -1,5 +1,6 @@
 # %%
 import sys
+
 sys.path += ["..", "../train_CLIP"]
 import os
 import os.path as osp
@@ -24,8 +25,10 @@ model_name = "RN50"
 model, preprocess = load_model(model_path, model_name)
 
 # %%
-ds = TextImageDataset(data_dir="/home/dungmaster/Projects/CapstoneProject/data",
-                      custom_tokenizer=True)
+ds = TextImageDataset(
+    data_dir="/home/dungmaster/Projects/CapstoneProject/data",
+    custom_tokenizer=True,
+)
 
 # %%
 n = 1000
@@ -35,7 +38,9 @@ len(test_data)
 images, texts = tuple(zip(*test_data))
 len(images)
 # %%
-saved_image_embedding = "../model_embeddings/2023_08_21/image_embeddings_test.txt"
+saved_image_embedding = (
+    "../model_embeddings/2023_08_21/image_embeddings_test.txt"
+)
 
 if osp.isfile(saved_image_embedding):
     image_embeddings = np.loadtxt(saved_image_embedding)
@@ -53,7 +58,9 @@ else:
     np.savetxt(saved_image_embedding, image_embeddings)
 
 # %%
-saved_text_embedding = "../model_embeddings/2023_08_21/text_embeddings_test.txt"
+saved_text_embedding = (
+    "../model_embeddings/2023_08_21/text_embeddings_test.txt"
+)
 
 if osp.isfile(saved_text_embedding):
     text_embeddings = np.loadtxt(saved_text_embedding)
@@ -97,38 +104,38 @@ images[idx]
 n_rows = 2
 n_cols = 5
 
-f, ax = plt.subplots(n_rows, n_cols, figsize=(20,10))
+f, ax = plt.subplots(n_rows, n_cols, figsize=(20, 10))
 ax[0, 0].set_ylabel("Groundtruth")
 ax[1, 0].set_ylabel("Predicted")
 
 for col in range(n_cols):
-    idx = random.randint(0, len(text_embeddings)-1)
+    idx = random.randint(0, len(text_embeddings) - 1)
     text = texts[idx]
-    
+
     # get the text imbedding
     txt_embed = text_embeddings[idx]
 
     # find the matched image according to the model
     similarity = txt_embed @ image_embeddings.T
     id_of_matched_object = np.argmax(similarity)
-        
-    desc_list = text.split(' ')
+
+    desc_list = text.split(" ")
     for j, elem in enumerate(desc_list):
         if j > 0 and j % 4 == 0:
-            desc_list[j] = desc_list[j] + '\n'
-    text = ' '.join(desc_list)
+            desc_list[j] = desc_list[j] + "\n"
+    text = " ".join(desc_list)
     ax[0, col].imshow(images[idx])
     ax[0, col].set_xticks([], [])
     ax[0, col].set_yticks([], [])
     ax[0, col].grid(False)
     ax[0, col].set_xlabel(text, fontsize=10)
-        
+
     predicted_item_text = texts[id_of_matched_object]
-    desc_list = predicted_item_text.split(' ')
+    desc_list = predicted_item_text.split(" ")
     for j, elem in enumerate(desc_list):
         if j > 0 and j % 4 == 0:
-            desc_list[j] = desc_list[j] + '\n'
-    text = ' '.join(desc_list)
+            desc_list[j] = desc_list[j] + "\n"
+    text = " ".join(desc_list)
     ax[1, col].imshow(images[id_of_matched_object])
     ax[1, col].set_xticks([], [])
     ax[1, col].set_yticks([], [])
@@ -144,11 +151,17 @@ embeddings_file = "../model_embeddings/2023_08_21/image_embeddings_demo.txt"
 image_paths = glob(osp.join(image_dir, "*.jpg"))
 image_embeddings = np.loadtxt(embeddings_file)
 
-prompts = ["red shirt", "pink short", "white sneaker", "round sunglasses", "golden ring"]
+prompts = [
+    "red shirt",
+    "pink short",
+    "white sneaker",
+    "round sunglasses",
+    "golden ring",
+]
 topk_matched_images = []
 
 for prompt in prompts:
-    found_image_paths, _  = search(
+    found_image_paths, _ = search(
         model,
         preprocess,
         prompt=prompt,
@@ -156,13 +169,12 @@ for prompt in prompts:
         image_embeddings=image_embeddings,
         top_k=5,
     )
-    images = [load_image(path, backend="pillow", toRGB=False)
-              for path in found_image_paths]
+    images = [
+        load_image(path, backend="pillow", toRGB=False)
+        for path in found_image_paths
+    ]
     topk_matched_images.append(images)
-    
-display_image_sets(
-    images=topk_matched_images,
-    set_titles=prompts
-)
+
+display_image_sets(images=topk_matched_images, set_titles=prompts)
 
 # %%
