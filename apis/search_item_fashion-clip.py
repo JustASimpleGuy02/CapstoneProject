@@ -11,11 +11,26 @@ import time
 
 from tqdm import tqdm
 import numpy as np
+import pandas as pd
 import cv2
 from PIL import Image
 import torch
 from fashion_clip.fashion_clip import FashionCLIP
 from tools import *
+
+metadata_df = pd.read_csv("data/hm/articles.csv")
+
+def image_description(path: str) -> str:
+    """Get description of image from image path
+    
+    Args:
+        path (str): path to image item
+
+    Returns:
+        str: string description of the item
+    """
+    
+    
 
 def search(
     model,
@@ -102,6 +117,7 @@ def main(args):
         save_embeddings = True
 
     t1 = time.time()
+    #TODO: plot each result image with its description
     found_image_paths, image_embeddings = search(
         fclip,
         prompt=prompt,
