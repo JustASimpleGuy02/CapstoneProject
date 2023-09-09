@@ -17,7 +17,7 @@ def split_text_into_lines(text: str):
     """
     desc_list = text.split(' ')
     for j, elem in enumerate(desc_list):
-        if j > 0 and j % 4 == 0:
+        if j > 0 and j % 2 == 0:
             desc_list[j] = desc_list[j] + '\n'
     text = ' '.join(desc_list)
     return text
@@ -104,6 +104,7 @@ def display_image_sets(
     assert len(set_titles) == n_rows, "Number of titles must be equal to number of item sets"
 
     figs, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
+    figs.subplots_adjust(bottom=0.5, wspace=1.0)
         
     for row, set_items in enumerate(images):
         text = set_titles[row]
