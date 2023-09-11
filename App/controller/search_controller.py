@@ -1,4 +1,5 @@
 import os
+import os.path as osp
 from glob import glob
 from PyQt5.QtCore import pyqtSignal
 from fashion_clip.fashion_clip import FashionCLIP
@@ -8,19 +9,15 @@ from PIL import Image
 
 fclip = FashionCLIP('fashion-clip')
 
-DATA_PATH = os.path.abspath(os.path.join(__file__, "..", "..", "..", "data"))
+image_dir = "data/demo/data_for_fashion_clip"
 
-img_dir = os.path.join(DATA_PATH, "demo", "data_for_fashion_clip")
+embeddings_file = "model_embeddings/fashion-clip/image_embeddings_demo.txt"
 
-img_name_dir = os.path.join(DATA_PATH, "demo", "preprocess_data", "img_names.txt")
+image_paths = sorted(glob(osp.join(image_dir, "*.jpg")))
 
-embedding_dir = os.path.join(DATA_PATH, "demo", "preprocess_data", "embedding.npy")
+image_embeddings = np.loadtxt(embeddings_file)
 
-with open(img_name_dir, 'r') as f:
-    lines = f.readlines()
-
-image_names = [line.strip() for line in lines]
-image_embeddings = np.load(embedding_dir)
+top_k = 5
 
 def load_image(path_to_image: str, backend: str = 'cv2', toRGB: bool = True) -> np.ndarray:
     """Loading image from specied path
@@ -51,17 +48,25 @@ def search(prompt: str,
     
     text_embedding = fclip.encode_text([prompt], 32)[0]
 
-
-    id_of_matched_object = np.argmax(text_embedding.dot(image_embeddings.T))
-    found_image_name = image_names[id_of_matched_object]
-
-    image_path = os.path.join(img_dir, found_image_name)
-
-    image = load_image(image_path)
-
-    image_1 = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    similarity = text_embedding @ image_embeddings.T
+    if len(similarity.shape) > 1:
+        similarity = np.squeeze(similarity)
     
-    search_done.emit(image_1)
+    matched_inds = np.argpartition(similarity, -top_k)[-top_k:]
+    sorted_inds = matched_inds[np.argsort(similarity[matched_inds])][::-1]
+    found_image_paths = [image_paths[ind] for ind in sorted_inds]
+    
+#    id_of_matched_object = np.argmax(text_embedding.dot(image_embeddings.T))
+#    found_image_name = image_names[id_of_matched_object]
+
+    images = [load_image(path, backend="pillow") for path in found_image_paths]
+
+    search_done.emit(images)
+
+#    images_result = np.hstack(images)
+
+#    search_done.emit(images_result)
+
 
 def embedding(image_dir: str, n_sample: int = 0):
     image_paths = sorted(glob(os.path.join(image_dir, "*.jpg")))
