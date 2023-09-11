@@ -16,3 +16,4 @@ git+https://github.com/katsura-jp/pytorch-cosine-annealing-with-warmup
 torchvision
 ftfy
 regex
+PyQt5
