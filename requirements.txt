@@ -1,4 +1,3 @@
-fashion-clip
 matplotlib
 ipykernel
 tqdm
