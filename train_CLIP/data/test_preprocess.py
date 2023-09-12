@@ -4,6 +4,6 @@ text = " Gold and black silk blend floral jacquard trousers from Christian Pelli
 
 # text = process_text.remove_punctuation(text)
 text = replace_punctuation_with_whitespace(text)
-text = remove_unwant_spaces(text)
+text = remove_unwanted_spaces(text)
 
 print(text)

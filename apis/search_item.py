@@ -11,7 +11,7 @@ import numpy as np
 import cv2
 from PIL import Image
 import torch
-from clip import *
+# from clip import *
 from tools import load_model
 from tools import *
 
