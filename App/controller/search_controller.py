@@ -6,29 +6,39 @@ from fashion_clip.fashion_clip import FashionCLIP
 import numpy as np
 import cv2
 from PIL import Image
+import yaml
+
+root_dir = os.path.abspath(os.path.join(__file__, "../../.."))
+
+with open(os.path.join(root_dir,'App/config/config.yaml'), 'r') as f:
+    path_config = yaml.safe_load(f)
 
 fclip = FashionCLIP('fashion-clip')
 
-image_dir = "data/demo/data_for_fashion_clip"
+image_dir = os.path.join(root_dir, path_config["IMAGE_DIR"])
 
-embeddings_file = "model_embeddings/fashion-clip/image_embeddings_demo.txt"
+embeddings_file = os.path.join(root_dir, path_config["EMBEDDINGS_PATH"])
 
 image_paths = sorted(glob(osp.join(image_dir, "*.jpg")))
 
-image_embeddings = np.loadtxt(embeddings_file)
+image_embeddings = np.load(embeddings_file)
 
-top_k = 5
+top_k = path_config["TOP_K"]
 
-def load_image(path_to_image: str, backend: str = 'cv2', toRGB: bool = True) -> np.ndarray:
+swap_channel = path_config["SWAP_CHANNEL"]
+
+backend = path_config["BACKEND"]
+
+def load_image(path_to_image: str, backend: str = 'cv2', swap_channel: bool = True) -> np.ndarray:
     """Loading image from specied path
 
     Args:
         path_to_image (str): absolute paths to images
-        toRGB (bool, optional): _description_. Defaults to True.
+        swap_channel (bool, optional): _description_. Defaults to True.
     """
     if backend == 'cv2':
         image = cv2.imread(path_to_image)
-        if toRGB:
+        if swap_channel:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     elif backend == 'pillow':
         image = np.array(Image.open(path_to_image))
@@ -59,7 +69,8 @@ def search(prompt: str,
 #    id_of_matched_object = np.argmax(text_embedding.dot(image_embeddings.T))
 #    found_image_name = image_names[id_of_matched_object]
 
-    images = [load_image(path, backend="pillow") for path in found_image_paths]
+    images = [load_image(path, backend=backend, swap_channel=swap_channel) 
+              for path in found_image_paths]
 
     search_done.emit(images)
 

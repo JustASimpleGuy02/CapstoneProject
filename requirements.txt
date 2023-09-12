@@ -3,7 +3,7 @@ ipykernel
 tqdm
 PyQt5
 fastapi
-opencv-python-headless
+opencv-python-headless==4.5.3.56
 uvicorn
 snoop
 scikit-learn

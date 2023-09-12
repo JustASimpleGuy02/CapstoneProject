@@ -1,0 +1,12 @@
+# IMAGE_DIR: "data/demo/data_for_fashion_clip"
+# EMBEDDINGS_PATH: "data/demo/preprocess_data/embedding.npy"
+
+
+# POLYVORE dataset
+IMAGE_DIR: "data/polyvore_outfits/images"
+EMBEDDINGS_PATH: "data/polyvore_outfits/preprocess_data/embedding.npy"
+
+BACKEND: "cv2"
+TOP_K: 5
+SWAP_CHANNEL: False
+
