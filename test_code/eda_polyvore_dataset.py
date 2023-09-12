@@ -2,6 +2,7 @@
 import os
 import os.path as osp
 import sys
+
 sys.path += ["../train_CLIP", ".."]
 
 from data.old_polyvore_text_image_dm import TextImageDataset

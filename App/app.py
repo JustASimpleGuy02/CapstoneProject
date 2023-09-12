@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
 
 from PyQt5.QtWidgets import QApplication
-from App.main_window import MainWindow
+from App.main_window_v2 import MainWindow
 
 if __name__ == "__main__":
     app=QApplication(sys.argv)

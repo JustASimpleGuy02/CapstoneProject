@@ -19,3 +19,5 @@ torchshow
 icecream
 tensorboard
 polars
+nltk
+h5py

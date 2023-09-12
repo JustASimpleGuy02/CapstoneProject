@@ -18,7 +18,7 @@ def rescale_image(image):
     h, w = image.shape[:2]
     max_dim = max(h, w)
     
-    scale_factor = 1500 / max_dim
+    scale_factor = 500 / max_dim
     
     new_h = int(h * scale_factor)
     new_w = int(w * scale_factor)
@@ -36,7 +36,7 @@ def numpy_to_qpixmap(image):
 
 class MainWindow(QMainWindow):
     
-    search_done = pyqtSignal(np.ndarray)
+    search_done = pyqtSignal(list)
     
     def __init__(self):
         super().__init__()
@@ -78,13 +78,15 @@ class MainWindow(QMainWindow):
         # Search frame
         self.search_frame = QFrame()
         self.search_layout = QHBoxLayout()
-        
+        self.search_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
         self.search_box = QLineEdit()
         self.search_box.setPlaceholderText("Enter prompt...")
-        font = QFont()
-        font.setPointSize(18)
-        font.setBold(True)
-        self.search_box.setFont(font)
+        
+        self.font = QFont()
+        self.font.setPointSize(18)
+        self.font.setBold(True)
+        self.search_box.setFont(self.font)
         self.search_box.setMinimumHeight(50)
         self.search_box.setStyleSheet(open(os.path.join(QSS_FOLDER, 'search_box.qss')).read())
         
@@ -106,10 +108,12 @@ class MainWindow(QMainWindow):
         # Result frame
         self.result_frame = QFrame()
         self.result_frame.setMinimumSize(700, 700)
-        self.result_layout = QStackedLayout()
-
+#        self.result_layout = QStackedLayout()
+        self.result_layout = QHBoxLayout()
+        self.result_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        
         self.result_screen = QLabel()
-        self.result_screen.setFont(font)
+        self.result_screen.setFont(self.font)
         self.result_screen.setPixmap(QPixmap())
         self.result_screen.setText("<b>Empty</b>")
         self.result_screen.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -128,6 +132,7 @@ class MainWindow(QMainWindow):
         self.clear_output_button.clicked.connect(self.clear_output_function)
     
     def search_function(self):
+        self.clear_output_function()
         input_prompt = self.search_box.text()
         
         if len(input_prompt) == 0:
@@ -141,16 +146,23 @@ class MainWindow(QMainWindow):
                                          search_done = self.search_done,
                                          n_sample = -1))
             
-    def showing_result(self, image):
+    def showing_result(self, images):
         self.result_screen.setText("")
         
-        image = rescale_image(image)
+        for image in images:
+            image = rescale_image(image)
+            self.result_screen = QLabel()
+            self.result_screen.setFont(self.font)
+            self.result_screen.setPixmap(numpy_to_qpixmap(image))
+            self.result_screen.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.result_layout.addWidget(self.result_screen)
         
-        self.result_screen.setPixmap(numpy_to_qpixmap(image))
-    
     def clear_output_function(self):
+        for i in reversed(range(self.result_layout.count())):
+            self.result_layout.itemAt(i).widget().setParent(None)
         self.result_screen.setPixmap(QPixmap())
         self.result_screen.setText("<b>Empty</b>")
+        self.result_layout.addWidget(self.result_screen)
     
     def add_item_function(self):
         pass

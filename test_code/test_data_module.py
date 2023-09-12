@@ -1,6 +1,7 @@
 # %%
 import os.path as osp
 import sys
+
 sys.path += ["../train_CLIP", ".."]
 
 from data.old_polyvore_text_image_dm import TextImageDataset
@@ -23,17 +24,17 @@ n_sample = 10
 n_rows = 2
 n_cols = n_sample // n_rows
 
-f, ax = plt.subplots(n_rows, n_cols, figsize=(20,10))
+f, ax = plt.subplots(n_rows, n_cols, figsize=(20, 10))
 
 for row in range(n_rows):
     for col in range(n_cols):
-        idx = random.randint(0, len(ds)-1)
+        idx = random.randint(0, len(ds) - 1)
         image, text = ds[idx]
-        desc_list = text.split(' ')
+        desc_list = text.split(" ")
         for j, elem in enumerate(desc_list):
             if j > 0 and j % 4 == 0:
-                desc_list[j] = desc_list[j] + '\n'
-        text = ' '.join(desc_list)
+                desc_list[j] = desc_list[j] + "\n"
+        text = " ".join(desc_list)
         ax[row, col].imshow(image)
         ax[row, col].set_xticks([], [])
         ax[row, col].set_yticks([], [])
@@ -46,7 +47,7 @@ for image, text in tqdm(ds):
     if len(text) > 77:
         count_long_text += 1
 count_long_text
-        
+
 # %%
 _tokenizer = SimpleTokenizer()
 
