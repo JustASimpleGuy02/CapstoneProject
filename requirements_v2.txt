@@ -11,9 +11,11 @@ fastapi
 torchshow
 icecream
 nltk
-pytorch_lightning==1.9.5
-git+https://github.com/katsura-jp/pytorch-cosine-annealing-with-warmup
 torchvision
 ftfy
 regex
 PyQt5
+ipykernel
+onnx
+onnxruntime
+optimum[exporters]

@@ -1,5 +1,8 @@
+from os import environ
+environ['OMP_NUM_THREADS'] = '1'
 import os
 import os.path as osp
+import time
 from glob import glob
 from PyQt5.QtCore import pyqtSignal
 from fashion_clip.fashion_clip import FashionCLIP
@@ -45,7 +48,7 @@ def search(prompt: str,
         search_done: signal emit when function complete
         n_sample (int): number of images to test if there are so many images
     """
-    
+    t1 = time.time()
     text_embedding = fclip.encode_text([prompt], 32)[0]
 
     similarity = text_embedding @ image_embeddings.T
@@ -55,6 +58,10 @@ def search(prompt: str,
     matched_inds = np.argpartition(similarity, -top_k)[-top_k:]
     sorted_inds = matched_inds[np.argsort(similarity[matched_inds])][::-1]
     found_image_paths = [image_paths[ind] for ind in sorted_inds]
+
+    t2 = time.time()
+
+    print(t2 - t1)
     
 #    id_of_matched_object = np.argmax(text_embedding.dot(image_embeddings.T))
 #    found_image_name = image_names[id_of_matched_object]
