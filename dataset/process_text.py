@@ -1,6 +1,7 @@
 import string
 import re
 
+
 def remove_punctuation(text: str):
     """
     Remove punctuation from string
@@ -11,9 +12,10 @@ def remove_punctuation(text: str):
     Returns:
         str: string with punctuation removed
     """
-    
-    result = text.translate(str.maketrans('', '', string.punctuation))
+
+    result = text.translate(str.maketrans("", "", string.punctuation))
     return result
+
 
 def remove_unwant_spaces(text: str):
     """
@@ -26,6 +28,6 @@ def remove_unwant_spaces(text: str):
         str: string with unwant spaces removed
     """
     result = text.strip()
-    
-    result = re.sub('\s+',' ', result)
+
+    result = re.sub("\s+", " ", result)
     return result

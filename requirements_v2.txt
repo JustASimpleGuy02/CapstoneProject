@@ -1,12 +1,12 @@
-fashion-clip
+fashion - clip
 matplotlib
 tqdm
 fastapi
-opencv-python-headless
+opencv - python - headless
 uvicorn
 snoop
-scikit-learn
-scikit-image
+scikit - learn
+scikit - image
 fastapi
 torchshow
 icecream
@@ -19,3 +19,5 @@ ipykernel
 onnx
 onnxruntime
 optimum[exporters]
+ipykernel
+streamlit

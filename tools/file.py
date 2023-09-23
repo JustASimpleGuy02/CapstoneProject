@@ -2,6 +2,7 @@ import json
 from pprint import pprint
 from typing import Dict, List, Union
 
+
 def load_json(path: str) -> Union[Dict, List[Dict]]:
     """Load a json file from path
 
@@ -12,10 +13,10 @@ def load_json(path: str) -> Union[Dict, List[Dict]]:
         Union[Dict, List[Dict]]: metadata loaded from file
     """
     data = json.load(open(path, "r", encoding="UTF-8"))
-    
+
     print("Number of key-value pairs:", len(data))
     print("Type of data:", type(data))
-    
+
     if isinstance(data, dict):
         first_pair = next(iter(data.items()))
         print(f"First Pair:")
@@ -26,5 +27,5 @@ def load_json(path: str) -> Union[Dict, List[Dict]]:
     elif isinstance(data, list):
         print("First element:")
         pprint(data[0])
-    
+
     return data

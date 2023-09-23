@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("train_CLIP")
 from argparse import ArgumentParser
 import os.path as osp
@@ -16,6 +17,7 @@ from clip import *
 from tools import load_model
 from tools import *
 
+
 def search(
     model: Any,
     preprocess: Any,
@@ -30,7 +32,7 @@ def search(
     """Search top images predicted by the model according to prompt
 
     Args:
-        model (Any): the pretrained model 
+        model (Any): the pretrained model
         process (Any): the text preprocess function
         prompt (str): input prompt to search for fashion item
         image_paths (List[str]): list of absolute paths to item images
@@ -82,22 +84,38 @@ def search(
 
     return found_image_paths, image_embeddings
 
+
 def parse_args():
     parser = ArgumentParser(description="Search fashion item using prompt")
     parser.add_argument("--image-dir", help="image data to search from")
     parser.add_argument("--model-name", help="name of the model")
-    parser.add_argument("--model-path", help="absolute or relative path to model")
+    parser.add_argument(
+        "--model-path", help="absolute or relative path to model"
+    )
     parser.add_argument("--prompt", help="prompt to search item")
-    parser.add_argument("-k", "--top-k", type=int, help="number of best items to choose", default=1)
-    parser.add_argument("--embeddings-file", help="file to load and save image embeddings")
-    parser.add_argument("-s", "--save-embeddings", action="store_true", help="whether to save image embeddings")        
+    parser.add_argument(
+        "-k",
+        "--top-k",
+        type=int,
+        help="number of best items to choose",
+        default=1,
+    )
+    parser.add_argument(
+        "--embeddings-file", help="file to load and save image embeddings"
+    )
+    parser.add_argument(
+        "-s",
+        "--save-embeddings",
+        action="store_true",
+        help="whether to save image embeddings",
+    )
     args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
     args = parse_args()
-    prompt = args.prompt 
+    prompt = args.prompt
     image_dir = args.image_dir
     model_name = args.model_name
     model_path = args.model_path
@@ -108,7 +126,9 @@ if __name__ == "__main__":
     print("Loading model...")
     model, preprocess = load_model(model_path, model_name)
     image_paths = sorted(glob(osp.join(image_dir, "*.jpg")))
-    assert len(image_paths) > 0, f"Directory {image_dir} does not have any .jpg images"
+    assert (
+        len(image_paths) > 0
+    ), f"Directory {image_dir} does not have any .jpg images"
 
     image_embeddings = None
 
@@ -116,7 +136,9 @@ if __name__ == "__main__":
         print(f"Load image embeddings from {embeddings_file}!")
         image_embeddings = np.loadtxt(embeddings_file)
     else:
-        print("Embedding file does not exist. Process the images and save embeddings!")
+        print(
+            "Embedding file does not exist. Process the images and save embeddings!"
+        )
         save_embeddings = True
 
     t1 = time.time()
@@ -127,16 +149,12 @@ if __name__ == "__main__":
         image_paths=image_paths,
         embeddings_file=embeddings_file,
         image_embeddings=image_embeddings,
-        top_k = top_k,
-        save_embeddings=save_embeddings
+        top_k=top_k,
+        save_embeddings=save_embeddings,
     )
     t2 = time.time()
     print(f"Time: {t2-t1}s")
-    
+
     images = [load_image(path, toRGB=False) for path in found_image_paths]
-    display_image_sets(
-        images=[images],
-        set_titles=[prompt]
-    )
+    display_image_sets(images=[images], set_titles=[prompt])
     print("Done!!!")
-    

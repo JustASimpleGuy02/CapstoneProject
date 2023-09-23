@@ -1,5 +1,6 @@
 from os import environ
-environ['OMP_NUM_THREADS'] = '1'
+
+environ["OMP_NUM_THREADS"] = "1"
 import os
 import os.path as osp
 import time
@@ -10,7 +11,7 @@ import numpy as np
 import cv2
 from PIL import Image
 
-fclip = FashionCLIP('fashion-clip')
+fclip = FashionCLIP("fashion-clip")
 
 image_dir = "data/demo/data_for_fashion_clip"
 
@@ -22,25 +23,27 @@ image_embeddings = np.loadtxt(embeddings_file)
 
 top_k = 5
 
-def load_image(path_to_image: str, backend: str = 'cv2', toRGB: bool = True) -> np.ndarray:
+
+def load_image(
+    path_to_image: str, backend: str = "cv2", toRGB: bool = True
+) -> np.ndarray:
     """Loading image from specied path
 
     Args:
         path_to_image (str): absolute paths to images
         toRGB (bool, optional): _description_. Defaults to True.
     """
-    if backend == 'cv2':
+    if backend == "cv2":
         image = cv2.imread(path_to_image)
         if toRGB:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    elif backend == 'pillow':
+    elif backend == "pillow":
         image = np.array(Image.open(path_to_image))
 
     return image
 
-def search(prompt: str,
-           search_done,
-           n_sample: int = -1):
+
+def search(prompt: str, search_done, n_sample: int = -1):
     """_summary_
 
     Args:
@@ -54,7 +57,7 @@ def search(prompt: str,
     similarity = text_embedding @ image_embeddings.T
     if len(similarity.shape) > 1:
         similarity = np.squeeze(similarity)
-    
+
     matched_inds = np.argpartition(similarity, -top_k)[-top_k:]
     sorted_inds = matched_inds[np.argsort(similarity[matched_inds])][::-1]
     found_image_paths = [image_paths[ind] for ind in sorted_inds]
@@ -62,13 +65,14 @@ def search(prompt: str,
     t2 = time.time()
 
     print(t2 - t1)
-    
-#    id_of_matched_object = np.argmax(text_embedding.dot(image_embeddings.T))
-#    found_image_name = image_names[id_of_matched_object]
+
+    #    id_of_matched_object = np.argmax(text_embedding.dot(image_embeddings.T))
+    #    found_image_name = image_names[id_of_matched_object]
 
     images = [load_image(path, backend="pillow") for path in found_image_paths]
 
     search_done.emit(images)
+
 
 #    images_result = np.hstack(images)
 

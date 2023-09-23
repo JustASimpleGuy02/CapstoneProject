@@ -1,6 +1,8 @@
 import sys
+
 sys.path += ["Hash4AllFashion"]
 from search_item import search
+
 
 def get_net(config, logger):
     """Get network."""
@@ -25,6 +27,6 @@ def get_net(config, logger):
     net.eval()  # Unable training
     return net
 
+
 if __name__ == "__main__":
     print("oke")
-

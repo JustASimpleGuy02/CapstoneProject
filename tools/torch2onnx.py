@@ -23,7 +23,9 @@ def parse_args():
     parser = ArgumentParser(description="convert pytorch model to onnx format")
     parser.add_argument("model_path", help="path to checkpoint of model")
     parser.add_argument("model_name", help="model's name, RN or ViT")
-    parser.add_argument("device", help="device used for inference", default="cpu")
+    parser.add_argument(
+        "device", help="device used for inference", default="cpu"
+    )
     args = parser.parse_args()
     return args
 
@@ -34,5 +36,5 @@ if __name__ == "__main__":
     model_path = args.model_path
     model_name = args.model_name
     device = args.device
-    
+
     torch2onnx(model_path, model_name, device)
