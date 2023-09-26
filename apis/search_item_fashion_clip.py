@@ -8,6 +8,7 @@ import random
 import time
 
 from tqdm import tqdm
+from icecream import ic
 import numpy as np
 import pandas as pd
 import cv2
@@ -19,7 +20,7 @@ from tools import *
 sys.path.append("train_CLIP")
 
 get_filename = lambda x: osp.basename(x).split(".")[0]
-
+norm = lambda x: np.linalg.norm(x, ord=2, axis=-1, keepdims=True)
 
 def image_description(path: str, df: pd.DataFrame = None) -> str:
     """Get description of image from image path
@@ -37,6 +38,8 @@ def image_description(path: str, df: pd.DataFrame = None) -> str:
 
 def search(
     model,
+    encode_images,
+    encode_prompt,
     prompt: str,
     image_paths: List[str],
     embeddings_file: str = None,
@@ -62,13 +65,15 @@ def search(
         List[str]: list of result image paths
         List[np.ndarray]: list of image embeddings for later use
     """
-    text_embedding = model.encode_text([prompt], batch_size)[0]
+    print("Embedding text...")
+    text_embedding = encode_prompt(prompt, batch_size)[0]
+    text_embedding = text_embedding[np.newaxis, ...]
 
     if n_sample is None or n_sample > len(image_paths):
         n_sample = len(image_paths)
 
     if image_embeddings is None:
-        image_embeddings = model.encode_images(
+        image_embeddings = encode_images(
             image_paths[:n_sample], batch_size=batch_size
         )
 
@@ -76,15 +81,23 @@ def search(
         print("Save image embeddings...")
         np.savetxt(embeddings_file, image_embeddings)
 
-    similarity = text_embedding.dot(image_embeddings.T)
+    image_embeddings = image_embeddings / norm(image_embeddings)
 
-    if len(similarity.shape) > 1:
-        similarity = np.squeeze(similarity)
+    # Ver 1
+    # similarity = text_embedding.dot(image_embeddings.T)
 
-    # Find most suitable image for the prompt
-    matched_inds = np.argpartition(similarity, -top_k)[-top_k:]
-    sorted_inds = matched_inds[np.argsort(similarity[matched_inds])][::-1]
-    found_image_paths = [image_paths[ind] for ind in sorted_inds]
+    # if len(similarity.shape) > 1:
+    #     similarity = np.squeeze(similarity)
+
+    # # Find most suitable image for the prompt
+    # matched_inds = np.argpartition(similarity, -top_k)[-top_k:]
+    # sorted_inds = matched_inds[np.argsort(similarity[matched_inds])][::-1]
+
+    # Ver 2
+    print("Find matching fashion items...")
+    inds = model._nearest_neighbours(top_k, text_embedding, image_embeddings)
+    inds = inds.squeeze().tolist()
+    found_image_paths = [image_paths[ind] for ind in inds]
 
     return found_image_paths, image_embeddings
 
