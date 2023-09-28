@@ -42,13 +42,14 @@ metadata_file = (
     "/home/dungmaster/Datasets/polyvore_outfits/polyvore_item_metadata.json"
 )
 
-top_k = 10
-n_cols = 5
-
 image_embeddings = None
 save_embeddings = False
 
 json_dict = {"top": 1, "bottom": 1, "bag": 1, "outerwear": 1, "shoe": 1}
+cates = [c for c in list(json_dict.keys()) if json_dict[c] != 0]
+
+top_k = 10
+n_cols = len(cates)
 
 name = lambda x: osp.basename(x).split(".")[0]
 
@@ -171,7 +172,7 @@ for ind_garment_query in range(top_k):
         json=json_dict,
     )
     outfit_recommend = response.json()["outfit_recommend"][0]
-    for cate in json_dict.keys():
+    for cate in cates:
         garm_path = osp.join(image_dir, outfit_recommend[cate])
         with cols[int(ind_garment_retrieved % n_cols)]:
             st.image(garm_path, width=250)
