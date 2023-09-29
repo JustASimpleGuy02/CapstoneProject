@@ -9,6 +9,9 @@ import time
 import requests
 import importlib
 import pickle
+from collections import defaultdict
+from pprint import pprint
+from icecream import ic
 
 import streamlit as st
 import numpy as np
@@ -45,10 +48,11 @@ metadata_file = (
 image_embeddings = None
 save_embeddings = False
 
-json_dict = {"top": 1, "bottom": 1, "bag": 1, "outerwear": 1, "shoe": 1}
-cates = [c for c in list(json_dict.keys()) if json_dict[c] != 0]
+json_request = {"top": [], "bottom": [], "bag": [], "outerwear": [], "shoe": []}
+# json_request = {"top": 1, "bottom": 1, "bag": 1, "outerwear": 1, "shoe": 1}
+cates = [c for c in list(json_request.keys()) if json_request[c] != 0]
 
-top_k = 10
+top_k = 30
 n_cols = len(cates)
 
 name = lambda x: osp.basename(x).split(".")[0]
@@ -150,36 +154,35 @@ t2 = time.time()
 print(f"Time: {t2-t1}s")
 
 # %% Display result in 3 columns
-#TODO: retrieve from output of previous model
+# json_request = defaultdict(list)
 cols = st.columns(n_cols)
 
 ind_garment_retrieved = 0
 ind_outfit = 0
-for ind_garment_query in range(top_k):
-    image_path = found_image_paths[ind_garment_query]
+for image_path in found_image_paths:
     image_id = name(image_path)
     category = metadata[image_id]["semantic_category"]
+    if category != "outerwear":
+        category = category[:-1]
+    json_request[category].append(image_id)
 
-    if category != "tops":
-        ind_garment_query += 1
-        continue
+response = requests.post(
+    url="http://127.0.0.1:3000/items/1/outfits_recommend_from_chosen/",
+    json=json_request,
+)
+json_response = response.json()
+outfit_recommends = json_response["outfit_recommend"]
 
-    category = category.replace("s", "")
-    json_dict[category] = image_id
-
-    response = requests.post(
-        url="http://127.0.0.1:3000/items/1/outfits_recommend/",
-        json=json_dict,
-    )
-    outfit_recommend = response.json()["outfit_recommend"][0]
+for outfit in outfit_recommends:
     for cate in cates:
-        garm_path = osp.join(image_dir, outfit_recommend[cate])
+        garm_path = osp.join(image_dir, outfit[cate])
         with cols[int(ind_garment_retrieved % n_cols)]:
             st.image(garm_path, width=250)
             ind_garment_retrieved += 1
 
     ind_outfit += 1
-    if ind_outfit == 3:
+
+    if ind_outfit >= 3:
         break
   
 # %%
