@@ -55,6 +55,13 @@ def base64_to_image(base64_string):
     return image
 
 
+def image_to_base64(image: Image):
+    image_bytes = BytesIO()
+    image.save(image_bytes, format="JPEG")
+    base64_image = base64.b64encode(image_bytes.getvalue()).decode("utf-8")
+    return base64_image
+
+
 def display_image_with_desc_grid(
     img_desc_pairs: Union[List, Tuple],
     n_sample: int,
