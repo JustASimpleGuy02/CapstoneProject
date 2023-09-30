@@ -10,6 +10,7 @@ from tqdm import tqdm
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 sys.path.append("../")
 from tools import *
 
@@ -18,10 +19,14 @@ data_dir = "/home/dungmaster/Datasets/polyvore_outfits"
 image_dir = osp.join(data_dir, "images")
 
 # %%
-outfit_titles = load_json(osp.join(data_dir, "polyvore_outfit_titles.json"), verbose=True)
+outfit_titles = load_json(
+    osp.join(data_dir, "polyvore_outfit_titles.json"), verbose=True
+)
 
 # %%
-item_metadata = load_json(osp.join(data_dir, "polyvore_item_metadata.json"), verbose=True)
+item_metadata = load_json(
+    osp.join(data_dir, "polyvore_item_metadata.json"), verbose=True
+)
 
 # %%
 train_disjoin_outfit_items = load_json(
@@ -54,12 +59,16 @@ test_nondisjoin_outfit_items = load_json(
 
 # %%
 doubt_cates = ["bottoms", "shoes"]
-id2cates = pd.read_csv(osp.join(data_dir, "categories.csv"),
-                       index_col=None,
-                       names=["id", "category", "semantic_category"])
+id2cates = pd.read_csv(
+    osp.join(data_dir, "categories.csv"),
+    index_col=None,
+    names=["id", "category", "semantic_category"],
+)
 id2cates.head()
 shoeid = list(set(id2cates[id2cates["semantic_category"] == "shoes"]["id"]))
-bottomid = list(set(id2cates[id2cates["semantic_category"] == "bottoms"]["id"]))
+bottomid = list(
+    set(id2cates[id2cates["semantic_category"] == "bottoms"]["id"])
+)
 shoeid
 
 # %%
@@ -79,9 +88,10 @@ for meta in tqdm(item_metadata.values()):
 shoe_freqs, bottom_freqs
 
 # %%
-shoe_kv = {"category": list(shoe_freqs.keys()),
-           "frequency": list(shoe_freqs.values())
-           }
+shoe_kv = {
+    "category": list(shoe_freqs.keys()),
+    "frequency": list(shoe_freqs.values()),
+}
 shoe_df = pd.DataFrame(shoe_kv)
 shoe_df = shoe_df.sort_values("frequency", ascending=False).head(5)
 
@@ -91,9 +101,10 @@ my_plot.set_xticklabels(my_plot.get_xticklabels())
 plt.savefig("../save_figs/shoe_categories_frequency.png")
 
 # %%
-bottom_kv = {"category": list(bottom_freqs.keys()),
-             "frequency": list(bottom_freqs.values())
-             }
+bottom_kv = {
+    "category": list(bottom_freqs.keys()),
+    "frequency": list(bottom_freqs.values()),
+}
 bottom_kv
 
 bottom_df = pd.DataFrame(bottom_kv)
