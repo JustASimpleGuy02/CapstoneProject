@@ -15,9 +15,9 @@ app = FastAPI()
 
 # Load hyperparams
 project_dir = "/home/dungmaster/Projects/Machine Learning"
-par_dir = osp.join(project_dir, "CapstoneProject")
+par_dir = osp.join(project_dir, "HangerAI_outfits_recommendation_system/CapstoneProject")
 image_dir = "/home/dungmaster/Datasets/polyvore_outfits/images"
-top_k = 5
+top_k = 20
 
 # TODO: change storage pkl file to more data, preferably full polyvore data
 hashes_file = osp.abspath(
@@ -59,7 +59,7 @@ def retrieve_item(input_data: TextInput):
     found_image_paths = ret.retrieve(query=processed_text)[:top_k]
 
     json_obj = {
-        "retrieved_items": [
+        "garments_retrieved": [
             {
                 "image_name": osp.basename(path),
                 "image_path": path,
