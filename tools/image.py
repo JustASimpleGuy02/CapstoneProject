@@ -9,7 +9,7 @@ import cv2
 import matplotlib.pyplot as plt
 
 
-def split_text_into_lines(text: str):
+def split_text_into_lines(text: str, n_text_one_line: int = 5):
     """Split text into multiple lines to display with image
 
     Args:
@@ -20,7 +20,7 @@ def split_text_into_lines(text: str):
     """
     desc_list = text.split(" ")
     for j, elem in enumerate(desc_list):
-        if j > 0 and j % 2 == 0:
+        if j > 0 and j % n_text_one_line == 0:
             desc_list[j] = desc_list[j] + "\n"
     text = " ".join(desc_list)
     return text
@@ -106,52 +106,75 @@ def display_image_with_desc_grid(
 
 
 def display_image_sets(
-    images: List[List[np.ndarray]],
-    set_titles: List[str],
+    images: List[Union[np.ndarray, List[np.ndarray]]],
+    set_titles: List[str] = None,
     descriptions: List[List[str]] = None,
     figsize: Tuple[int, int] = (10, 20),
     fontsize: int = 10,
+    title: str = None,
 ):
     """Display item sets with their titles
 
     Args:
-        images (List[List[np.ndarray]]): list of images to load and display
+        images (List[Union[np.ndarray, List[np.ndarray]]): list of images to load and display
         set_titles (List[str]): list of titles accompanying each set
         descriptions (List[List[str]]): list of description of each item, default None
         figsize (Tuple[int, int]): figsize to plot in matplotlib
         fontsize (int): font size of each text description of image
     """
     n_rows = len(images)
-    n_cols = max([len(set) for set in images])
+    n_cols = (
+        max([len(items_set) for items_set in images])
+        if isinstance(images[0], list)
+        else 1
+    )
 
-    assert (
-        len(set_titles) == n_rows
-    ), "Number of titles must be equal to number of item sets"
+    if set_titles is not None:
+        assert (
+            len(set_titles) == n_rows
+        ), "Number of titles must be equal to number of item sets"
 
     figs, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
     figs.subplots_adjust(bottom=0.5, wspace=1.0)
 
+    if title:
+        figs.suptitle(split_text_into_lines(title), fontsize=10)
+
     for row, set_items in enumerate(images):
-        text = set_titles[row]
-        text = split_text_into_lines(text)
-        if n_rows == 1:
-            axes[0].set_ylabel(text, fontsize=fontsize)
-        else:
-            axes[row, 0].set_ylabel(text, fontsize=fontsize)
-        for col, image in enumerate(set_items):
-            if n_rows == 1:
-                ax = axes[col]
-            else:
-                ax = axes[row, col]
+        if set_titles is not None:
+            text = set_titles[row]
+            text = split_text_into_lines(text)
 
-            if descriptions is not None:
-                desc = descriptions[row][col]
-                desc = split_text_into_lines(desc)
-                ax.set_xlabel(desc, fontsize=fontsize)
-
-            ax.imshow(image)
+        if isinstance(set_items, np.ndarray):
+            ax = axes[row]
+            if set_titles is not None:
+                ax.set_ylabel(text, fontsize=fontsize)
+            ax.imshow(set_items)
             ax.set_xticks([], [])
             ax.set_yticks([], [])
             ax.grid(False)
+
+        else:
+            if set_titles is not None:
+                if n_rows == 1:
+                    axes[0].set_ylabel(text, fontsize=fontsize)
+                else:
+                    axes[row, 0].set_ylabel(text, fontsize=fontsize)
+
+            for col, image in enumerate(set_items):
+                if n_rows == 1:
+                    ax = axes[col]
+                else:
+                    ax = axes[row, col]
+
+                if descriptions is not None:
+                    desc = descriptions[row][col]
+                    desc = split_text_into_lines(desc)
+                    ax.set_xlabel(desc, fontsize=fontsize)
+
+                ax.imshow(image)
+                ax.set_xticks([], [])
+                ax.set_yticks([], [])
+                ax.grid(False)
 
     plt.show()
