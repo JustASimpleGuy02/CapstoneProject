@@ -91,7 +91,7 @@ class FashionRetrieval:
         inds = inds.squeeze().tolist()
         found_image_paths = [self.image_paths[ind] for ind in inds]
 
-        return found_image_paths
+        return found_image_paths, text_embedding
 
 
 def search(
