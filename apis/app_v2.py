@@ -15,7 +15,9 @@ app = FastAPI()
 
 # Load hyperparams
 project_dir = "/home/dungmaster/Projects/Machine Learning"
-par_dir = osp.join(project_dir, "HangerAI_outfits_recommendation_system/CapstoneProject")
+par_dir = osp.join(
+    project_dir, "HangerAI_outfits_recommendation_system/CapstoneProject"
+)
 image_dir = "/home/dungmaster/Datasets/polyvore_outfits/images"
 top_k = 20
 
