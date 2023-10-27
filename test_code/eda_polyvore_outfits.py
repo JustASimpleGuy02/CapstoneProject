@@ -6,15 +6,20 @@ import sys
 import random
 from pprint import pprint
 
+# from functools import map
+
 from tqdm import tqdm
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 sys.path.append("../")
-from tools import *
+from tools import load_image, load_json, display_image_sets
 
-# %%
+sns.set_theme()
+
+# %% Loading data
 data_dir = "/home/dungmaster/Datasets/polyvore_outfits"
 image_dir = osp.join(data_dir, "images")
 
@@ -58,64 +63,6 @@ test_nondisjoin_outfit_items = load_json(
 )
 
 # %%
-doubt_cates = ["bottoms", "shoes"]
-id2cates = pd.read_csv(
-    osp.join(data_dir, "categories.csv"),
-    index_col=None,
-    names=["id", "category", "semantic_category"],
-)
-id2cates.head()
-shoeid = list(set(id2cates[id2cates["semantic_category"] == "shoes"]["id"]))
-bottomid = list(
-    set(id2cates[id2cates["semantic_category"] == "bottoms"]["id"])
-)
-shoeid
-
-# %%
-shoe_freqs = {}
-bottom_freqs = {}
-chosen_ids = shoeid + bottomid
-for meta in tqdm(item_metadata.values()):
-    cate_id = int(meta["category_id"])
-    if cate_id not in chosen_ids:
-        continue
-    cate = id2cates[id2cates["id"] == cate_id]["category"].iloc[0]
-    if cate_id in shoeid:
-        shoe_freqs[cate] = shoe_freqs.get(cate, 0) + 1
-    else:
-        bottom_freqs[cate] = bottom_freqs.get(cate, 0) + 1
-
-shoe_freqs, bottom_freqs
-
-# %%
-shoe_kv = {
-    "category": list(shoe_freqs.keys()),
-    "frequency": list(shoe_freqs.values()),
-}
-shoe_df = pd.DataFrame(shoe_kv)
-shoe_df = shoe_df.sort_values("frequency", ascending=False).head(5)
-
-my_plot = sns.barplot(data=shoe_df, x="category", y="frequency")
-plt.title("Top shoe categories frequency")
-my_plot.set_xticklabels(my_plot.get_xticklabels())
-plt.savefig("../save_figs/shoe_categories_frequency.png")
-
-# %%
-bottom_kv = {
-    "category": list(bottom_freqs.keys()),
-    "frequency": list(bottom_freqs.values()),
-}
-bottom_kv
-
-bottom_df = pd.DataFrame(bottom_kv)
-bottom_df = bottom_df.sort_values("frequency", ascending=False).head(5)
-
-my_plot = sns.barplot(data=bottom_df, x="category", y="frequency")
-plt.title("Top bottom categories frequency")
-my_plot.set_xticklabels(my_plot.get_xticklabels())
-plt.savefig("../save_figs/bottom_categories_frequency.png")
-
-# %%
 idx = random.randint(0, len(train_disjoin_outfit_items) - 1)
 set_id = train_disjoin_outfit_items[idx]["set_id"]
 set_items = train_disjoin_outfit_items[idx]["items"]
@@ -124,7 +71,7 @@ set_title = outfit_titles[set_id]
 print(set_title)
 pprint(set_items)
 
-# %%
+# %% Display outfits with their titles
 outfit_data = train_disjoin_outfit_items
 n_outfits = len(outfit_data)
 n_sample = 5
@@ -146,9 +93,96 @@ for ind in rand_inds:
         image = load_image(image_path, backend="pillow")
         images.append(image)
 
+    images = np.hstack(images)
     sample_images.append(images)
     sample_set_titles.append(set_title)
 
 display_image_sets(sample_images, sample_set_titles, fontsize=7)
 
-# %%
+# %% Number of items in each outfit frequency
+nums = []
+n_items = lambda o: len(o["items"])
+
+for dataset in [
+    train_disjoin_outfit_items,
+    valid_disjoin_outfit_items,
+    test_disjoin_outfit_items,
+    train_nondisjoin_outfit_items,
+    valid_disjoin_outfit_items,
+    test_nondisjoin_outfit_items,
+]:
+    nums += list(map(n_items, dataset))
+nums = pd.Series(nums)
+nums_freq = (
+    nums.value_counts()
+    .reset_index()
+    .rename(columns={"index": "value", 0: "count"})
+)
+nums_freq
+
+# %% Encode description of each image item
+"""
+The embedding file has format:
+{
+    "{id_name}.jpg": feature_vector
+}
+"""
+
+
+# %% Check bottom and shoe's subcategories frequency
+# doubt_cates = ["bottoms", "shoes"]
+# id2cates = pd.read_csv(
+#     osp.join(data_dir, "categories.csv"),
+#     index_col=None,
+#     names=["id", "category", "semantic_category"],
+# )
+# id2cates.head()
+# shoeid = list(set(id2cates[id2cates["semantic_category"] == "shoes"]["id"]))
+# bottomid = list(
+#     set(id2cates[id2cates["semantic_category"] == "bottoms"]["id"])
+# )
+# shoeid
+
+# # %%
+# shoe_freqs = {}
+# bottom_freqs = {}
+# chosen_ids = shoeid + bottomid
+# for meta in tqdm(item_metadata.values()):
+#     cate_id = int(meta["category_id"])
+#     if cate_id not in chosen_ids:
+#         continue
+#     cate = id2cates[id2cates["id"] == cate_id]["category"].iloc[0]
+#     if cate_id in shoeid:
+#         shoe_freqs[cate] = shoe_freqs.get(cate, 0) + 1
+#     else:
+#         bottom_freqs[cate] = bottom_freqs.get(cate, 0) + 1
+
+# shoe_freqs, bottom_freqs
+
+# # %%
+# shoe_kv = {
+#     "category": list(shoe_freqs.keys()),
+#     "frequency": list(shoe_freqs.values()),
+# }
+# shoe_df = pd.DataFrame(shoe_kv)
+# shoe_df = shoe_df.sort_values("frequency", ascending=False).head(5)
+
+# my_plot = sns.barplot(data=shoe_df, x="category", y="frequency")
+# plt.title("Top shoe categories frequency")
+# my_plot.set_xticklabels(my_plot.get_xticklabels())
+# plt.savefig("../save_figs/shoe_categories_frequency.png")
+
+# # %%
+# bottom_kv = {
+#     "category": list(bottom_freqs.keys()),
+#     "frequency": list(bottom_freqs.values()),
+# }
+# bottom_kv
+
+# bottom_df = pd.DataFrame(bottom_kv)
+# bottom_df = bottom_df.sort_values("frequency", ascending=False).head(5)
+
+# my_plot = sns.barplot(data=bottom_df, x="category", y="frequency")
+# plt.title("Top bottom categories frequency")
+# my_plot.set_xticklabels(my_plot.get_xticklabels())
+# plt.savefig("../save_figs/bottom_categories_frequency.png")
