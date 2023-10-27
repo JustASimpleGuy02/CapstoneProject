@@ -52,10 +52,6 @@ for i, item_info in enumerate(garments_retrieved):
             desc = info["title"]
         elif len(info["url_name"]) != 0:
             desc = info["url_name"]
-    
+
     with cols[int(i % n_cols)]:
-        st.image(img_item,
-                 caption=(desc if show_desc else None),
-                 width=250)
-
-
+        st.image(img_item, caption=(desc if show_desc else None), width=250)
