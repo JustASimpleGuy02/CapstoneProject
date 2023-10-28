@@ -4,6 +4,7 @@ import os.path as osp
 import pickle
 from shutil import copy
 from tqdm import tqdm
+from PIL import Image
 
 # %%
 project_dir = "/home/dungmaster/Projects/Machine Learning"
@@ -15,6 +16,7 @@ new_image_dir = osp.join(
     "CapstoneProject",
     "static"
 )
+image_size = (256, 256)
 
 hashes_file = osp.abspath(
     osp.join(
@@ -35,10 +37,14 @@ image_paths = list(hashes_polyvore.keys())
 for path in tqdm(image_paths):
     src_img_path = osp.join(image_dir, path)
     dst_img_path = osp.join(new_image_dir, path)
-    try:
-        copy(src_img_path, dst_img_path)
-    except Exception as e:
-        continue
+
+    image = Image.open(src_img_path).resize(image_size)
+    image.save(dst_img_path)
+    
+    # try:
+    #     copy(src_img_path, dst_img_path)
+    # except Exception as e:
+    #     continue
 
 # %%
 sample = hashes_polyvore[image_paths[21]]
