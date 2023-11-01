@@ -28,19 +28,49 @@ sns.set_theme()
 gtranslate = GoogleTranslateV2()
 name = lambda x: Path(x).name
 outfit_fields = [
-    "Outfit_Description",
-    "Outfit_Name",
-    "Oufit_Fit",
-    "Outfit_Gender",
-    "Outfit_Occasion",
-    "Outfit_Style",
+    # "Outfit_Description",
+    # "Outfit_Name",
+    "Outfit_Fit",
+    # "Outfit_Gender",
+    # "Outfit_Occasion",
+    # "Outfit_Style",
 ]
 cn_outfit_fields = ["cn_" + f for f in outfit_fields]
 en_outfit_fields = ["en_" + f for f in outfit_fields]
 
 # %%
-data_dir = "/home/dungmaster/Datasets/Fashion_Outfits_Theme_Aware"
-outfit_dirs = glob(osp.join(data_dir, "*/"))
+data_dir = "/home/dungmaster/Datasets/Fashion-Outfits-Theme-Aware"
+outfit_dirs = glob(osp.join(data_dir, "outfits", "*/"))
+len(outfit_dirs)
+
+# %%
+names = ["Name", "Name_Short"]
+cn_outfit_names = ["cn_" + f for f in names]
+en_outfit_names = ["en_" + f for f in names]
+
+df = pd.DataFrame(columns=["image"] + cn_outfit_names + en_outfit_names)
+
+for outfit in tqdm(outfit_dirs):
+    metadata = load_json(osp.join(outfit, name(outfit) + ".json"))
+    items = metadata["Items"]
+
+    for item in items:
+        cn_fields = []
+        en_fields = []
+        
+        item_image = item["Image"]
+        
+        for nm in names:
+            cnf = item.get(nm, "")
+            enf = ""
+
+            if len(cnf) != 0:
+                enf = gtranslate.translate(cnf, "English")
+
+            cn_fields.append(cnf)
+            en_fields.append(enf)
+
+        df.loc[len(df.index)] = [item_image] + cn_fields + en_fields
 
 # %%
 df = pd.DataFrame(columns=["id"] + cn_outfit_fields + en_outfit_fields)
@@ -67,7 +97,7 @@ for outfit in tqdm(outfit_dirs):
 df.tail(10)
 
 # %%
-to_csv("../theme_aware_dataset_descriptions_v2.csv", df)
+to_csv("../outfit_fit_info.csv", df)
 
 # %%
 json_desc = {}
