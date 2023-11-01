@@ -1,16 +1,13 @@
+import sys
 import os.path as osp
 import time
 import requests
+from pprint import pprint
 
 import pandas as pd
 import streamlit as st
 from PIL import Image, ImageOps
-from tools import display_centered_text
-
-import sys
-
-sys.path += [".."]
-from tools import load_json
+from tools import display_centered_text, load_json
 
 # Some hyperparams
 image_dir = "/home/dungmaster/Datasets/polyvore_outfits/images"
@@ -51,6 +48,7 @@ cols = st.columns(n_cols, )
 print(n_cols)
 
 json_response = response.json()
+pprint(json_response)
 
 first_item_cates = json_response["first_item_cate"]
 outfit_recommends = json_response["outfit_recommend"]
