@@ -6,7 +6,6 @@ import sys
 import random
 from pprint import pprint
 import importlib
-import json
 
 from tqdm import tqdm
 import numpy as np
@@ -27,7 +26,9 @@ tqdm.pandas()
 
 # %% Loading data
 data_dir = "/home/dungmaster/Datasets/Fashion-Outfits-Theme-Aware"
+stored_data_dir = "../../data"
 outfits_dir = osp.join(data_dir, "outfits")
+out_path = "../../data/clean_theme_outfit_items_v1.csv"
 
 # # %%
 # df = pd.read_csv("../../data/theme_aware_outfit_items.csv")
@@ -97,8 +98,8 @@ outfits_dir = osp.join(data_dir, "outfits")
 # df.head(5)
 
 # %%
-out_path = "../../data/clean_theme_outfit_items_v1.csv" 
-io.to_csv(out_path, df)
+# out_path = "../../data/clean_theme_outfit_items_v1.csv" 
+# io.to_csv(out_path, df)
 
 # %%
 df = pd.read_csv(out_path)
@@ -148,9 +149,8 @@ outfit_descriptions = io.load_json(
 )
 
 # %%
-# rand_ind = random.sample(range(len(invalid_bottom_df)), 1)[0]
-rand_ind = 4
-print(rand_ind)
+rand_ind = random.sample(range(len(invalid_bottom_df)), 1)[0]
+print("Index in dataframe:", rand_ind)
 row = invalid_bottom_df.loc[rand_ind]
 
 sample_images = []
@@ -159,7 +159,7 @@ image_2ds = []
 
 titles = []
 outfit_id = str(row.outfit_id)
-print(outfit_id)
+print("Outfit id:", outfit_id)
 item_images = []
 outfit_images = []
 
@@ -207,18 +207,92 @@ outfit_images = np.hstack(outfit_images)
 sample_images += [item_images, outfit_images]
 sample_titles.append(titles)
 
-print(titles)
+print("Categories:", titles)
 plot.display_image_sets(sample_images, title=outfit_text, descriptions=sample_titles)
 
 # %%
 if len(image_2ds) > 0:
     plt.imshow(np.hstack(image_2ds), cmap="gray")
 
-# %% Remove outfit with the id 7354 because its images are unrelated to outfit
-df = df[df["outfit_id"] != 7354]
-len(df)
+# # %% Remove outfit with the id 7354 because its images are unrelated to outfit
+# df = df[df["outfit_id"] != 7354]
+# len(df)
 
 # %%
 df["top"].tolist()
+
+# %%
+df = pd.read_csv(out_path)
+outfit_ids = df["outfit_id"].tolist()
+print(len(outfit_ids))
+df.head(5)
+
+# %% Filter 2D images
+invalid_outfits = {}
+grey_images = []
+nonexist_images = []
+
+for outfit_id in tqdm(outfit_ids):
+    outfit_id = str(outfit_id)
+    outfit_dir = osp.join(outfits_dir, outfit_id)
+    outfit_meta = io.load_json(osp.join(outfit_dir, outfit_id + ".json"))
+
+    nonexist_img_paths = []        
+    grey_img_paths = []
+        
+    for item_info in outfit_meta["Items"]:
+        image_name = item_info["Image"]
+        image_path = osp.join(outfit_dir, image_name)
+
+        if not osp.exists(image_path):
+            nonexist_img_paths.append(image_name)
+        else:
+            try:
+                image = np.array(Image.open(image_path))
+            except Exception as e:
+                print(e)
+                nonexist_img_paths.append(image_name)
+                continue
+
+            if len(image.shape) < 3:
+                grey_img_paths.append(image_name)
+
+    if len(grey_img_paths) != 0 or len(nonexist_img_paths) != 0:
+        invalid_outfits[outfit_id] = {
+            "grey_images": grey_img_paths,
+            "nonexist_images": nonexist_img_paths
+        }
+            
+print("Number of invalid outfits:", len(invalid_outfits))
+
+# %%
+invalid_outfits 
+
+# %%
+io.save_json(invalid_outfits, osp.join(stored_data_dir, "invalid_outfits.json"))
+
+# %%
+gray_image_file = osp.join(stored_data_dir, "gray_images.txt")
+grey_images = io.load_txt(gray_image_file)
+# io.save_txt(grey_images, gray_image_file)
+
+nonexist_image_file = osp.join(stored_data_dir, "nonexist_images.txt")
+nonexist_images = io.load_txt(nonexist_image_file)
+# io.save_txt(nonexist_images, nonexist_image_file)
+
+# %% Check if all path in nonexist_images is really non-exist
+get_outfit = lambda x: x.split('_')[0]
+nonexist_image_paths = [
+    osp.join(outfits_dir, "outfits", get_outfit(p), p)
+    for p in nonexist_images
+]
+nonexist_image_paths
+
+# %%
+exists = [
+    osp.exists(p)
+    for p in nonexist_image_paths
+]
+any(exists)
 
 # %%
