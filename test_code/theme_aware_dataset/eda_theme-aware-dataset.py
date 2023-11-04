@@ -14,10 +14,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from PIL import Image
+import cv2
 
-from reproducible_code.tools import load_json, display_image_sets, plot_attribute_frequency, load_pickle, plot_multiple_images
+sys.path += ["../"]
+from reproducible_code.tools import io, plot
+importlib.reload(plot)
 
 sns.set_theme()
+sns.set_style("whitegrid", {'axes.grid' : False})
 tqdm.pandas()
 
 # %% Loading data
@@ -66,28 +70,27 @@ ax = sns.barplot(df, x=field, y="index")
 ax.bar_label(ax.containers[0], fontsize=10);
 
 # %%
-outfit_descriptions = load_json(
+outfit_descriptions = io.load_json(
     osp.join(data_dir, "theme_aware_dataset_descriptions.json"), verbose=True
 )
 outfit_ids = list(outfit_descriptions.keys())
 
 # %% Display outfits with their descriptions
 n_outfits = len(outfit_ids)
-n_sample = 1
-rand_inds = random.sample(range(0, n_outfits - 1), n_sample)
+n_sample = 8
+outfit_ids = random.sample(outfit_ids, n_sample)
 
 sample_images = []
 sample_outfit_titles = []
-image_2ds = []
+grey_images = []
 
-for ind in rand_inds:
-    outfit_id = outfit_ids[ind]
+for outfit_id in outfit_ids:
     item_images = []
     outfit_images = []
 
     outfit_dir = osp.join(outfits_dir, outfit_id)
     outfit_info = outfit_descriptions[outfit_id]
-    outfit_meta = load_json(osp.join(outfit_dir, outfit_id + ".json"))
+    outfit_meta = io.load_json(osp.join(outfit_dir, outfit_id + ".json"))
 
     outfit_title = outfit_info["en_Outfit_Name"]
     outfit_desc = outfit_info["en_Outfit_Description"]
@@ -98,29 +101,55 @@ for ind in rand_inds:
 
     for item_info in outfit_meta["Items"]:
         image_path = osp.join(outfit_dir, item_info["Image"])
-        image = np.array(Image.open(image_path))
-        if len(image.shape) < 3:
-            print("2d image")
-            image_2ds.append(image)
+
+        try:
+            image = np.array(Image.open(image_path))
+        except Exception:
+            continue
+        sizes = image.shape
+    
+        if len(sizes) == 3:
+            if sizes[-1] == 4:
+                print("4-channel image")
+                image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
+        else:
+            print(f"grey image")
             image = image[..., np.newaxis].repeat(3, -1)
+            grey_images.append(image)
+        
         item_images.append(image)
-    item_images = np.hstack(item_images)
+
+    item_images = np.vstack(item_images)
+    ih, iw, _ = item_images.shape
 
     for outfit_image in outfit_meta["Outfit_Images"]:
         outfit_image_path = osp.join(outfit_dir, outfit_image)
         outfit_image = np.array(Image.open(outfit_image_path))
         outfit_images.append(outfit_image)
-    outfit_images = np.hstack(outfit_images)
 
-    # outfit_images.resize(item_images.shape)
-    # print(item_images.shape[::-1])
-    # print(outfit_images.shape)
+    outfit_images = np.vstack(outfit_images)
+    oh, ow, _ = outfit_images.shape
 
-    sample_images += [item_images, outfit_images]
-    # sample_outfit_titles += [outfit_title, ""]
+    outfit_images = cv2.resize(outfit_images, (int(ih * ow/oh), ih))
+    print(item_images.shape, outfit_images.shape)
+    combined_image = np.hstack((item_images, outfit_images))
+    print(combined_image.shape)
 
-display_image_sets(sample_images, title=outfit_text)
+    sample_images.append(combined_image)
+    sample_outfit_titles.append(outfit_text)
+
+# display_image_sets(sample_images, title=outfit_text)
+plot.display_multiple_images(
+    sample_images,
+    grid_nrows=1,
+    fig_size=24,
+    titles=sample_outfit_titles,
+    fontsize=10,
+    axes_pad=1.
+)
 
 # %%
 if len(image_2ds) > 0:
     plt.imshow(np.hstack(image_2ds), cmap="gray")
+
+# %%
