@@ -8,8 +8,6 @@ from pprint import pprint
 import importlib
 import json
 
-# from functools import map
-
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
@@ -17,8 +15,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from PIL import Image
 
-from translatepy.translators.google import GoogleTranslateV2
-from reproducible_code.tools import load_json, display_image_sets, plot_attribute_frequency, load_pickle
+from reproducible_code.tools import load_json, display_image_sets, plot_attribute_frequency, load_pickle, plot_multiple_images
 
 sns.set_theme()
 tqdm.pandas()
@@ -125,5 +122,5 @@ for ind in rand_inds:
 display_image_sets(sample_images, title=outfit_text)
 
 # %%
-plt.imshow(np.hstack(image_2ds), cmap="gray")
-
+if len(image_2ds) > 0:
+    plt.imshow(np.hstack(image_2ds), cmap="gray")
