@@ -16,7 +16,7 @@ from PIL import Image
 import cv2
 
 sys.path += ["../"]
-from reproducible_code.tools import plot, io
+from reproducible_code.tools import plot, io, image_io
 
 importlib.reload(plot)
 
@@ -229,8 +229,9 @@ df.head(5)
 
 # %% Filter 2D images
 invalid_outfits = {}
-grey_images = []
-nonexist_images = []
+# nonexist_images = []
+# grey_images = []
+# rgba_images = []
 
 for outfit_id in tqdm(outfit_ids):
     outfit_id = str(outfit_id)
@@ -239,6 +240,8 @@ for outfit_id in tqdm(outfit_ids):
 
     nonexist_img_paths = []        
     grey_img_paths = []
+    rgba_img_paths = []
+    other_img_paths = []
         
     for item_info in outfit_meta["Items"]:
         image_name = item_info["Image"]
@@ -248,25 +251,42 @@ for outfit_id in tqdm(outfit_ids):
             nonexist_img_paths.append(image_name)
         else:
             try:
-                image = np.array(Image.open(image_path))
+                # image = np.array(Image.open(image_path))
+                image = image_io.load_image(image_path)
             except Exception as e:
-                print(e)
-                nonexist_img_paths.append(image_name)
+                if "identify" in str(e): 
+                    nonexist_img_paths.append(image_name)
+                elif "empty" in str(e):
+                    other_img_paths.append(image_name)
+                else:
+                    print("Other error:", e)
                 continue
 
-            if len(image.shape) < 3:
-                grey_img_paths.append(image_name)
+            sizes = image.shape
 
-    if len(grey_img_paths) != 0 or len(nonexist_img_paths) != 0:
+            if len(sizes) < 3:
+                grey_img_paths.append(image_name)
+            elif sizes[-1] != 3:
+                rgba_img_paths.append(image_name)
+
+    if len(grey_img_paths) != 0 or len(nonexist_img_paths) != 0 or len(other_img_paths) != 0:
         invalid_outfits[outfit_id] = {
             "grey_images": grey_img_paths,
-            "nonexist_images": nonexist_img_paths
+            "nonexist_images": nonexist_img_paths,
+            "rgba_images": rgba_img_paths,
+            "other_error_images": other_img_paths
         }
             
 print("Number of invalid outfits:", len(invalid_outfits))
 
 # %%
-invalid_outfits 
+checks = list(invalid_outfits["2138"].keys())
+for c in checks:
+    num_invalid_outfits = sum([
+        len(v[c]) != 0
+        for _, v in invalid_outfits.items()
+    ])
+    print(f"Number of invalid outfits type {c}: {num_invalid_outfits}")
 
 # %%
 io.save_json(invalid_outfits, osp.join(stored_data_dir, "invalid_outfits.json"))
