@@ -15,7 +15,7 @@ import seaborn as sns
 
 tqdm.pandas()
 sys.path.append("../")
-from reproducible_code.tools import load_json, save_json, load_csv, to_csv, plot_attribute_frequency, plot_multiple_images
+from reproducible_code.tools import load_json, save_json, load_csv, to_csv, plot_attribute_frequency, display_multiple_images
 # from translatepy.translators.google import GoogleTranslateV2
 
 # %%
@@ -38,39 +38,42 @@ subcates_cn2en = load_json("../../data/theme_aware_fashion_subcategory_cn2en.jso
 subcates_cn2en
 
 # %%
-# count = 0
-# df_outfit_items = pd.DataFrame(columns=[["outfit_id"] + cates])
-# invalid_cate_img = []
+count = 0
+df_outfit_items = pd.DataFrame(columns=[["outfit_id"] + cates])
+invalid_cate_img = []
 
-# for outfit_path in tqdm(outfit_dirs):
-#     outfit_id = name(outfit_path)
-#     metadata = load_json(osp.join(outfit_path, outfit_id + ".json"))
-#     item_infos = metadata["Items"]
-#     cate_imgs = cate2imgs.copy()
+for outfit_path in tqdm(outfit_dirs):
+    outfit_id = name(outfit_path)
+    metadata = load_json(osp.join(outfit_path, outfit_id + ".json"))
+    item_infos = metadata["Items"]
+    cate_imgs = cate2imgs.copy()
 
-#     for item_info in item_infos:
-#         cate_tag = ""
+    for item_info in item_infos:
+        cate_tag = ""
 
-#         image_name = item_info["Image"]
-#         cate_tagl = item_info["Tags"]["97"]
+        image_name = item_info["Image"]
+        cate_tagl = item_info["Tags"]["97"]
 
-#         if len(cate_tagl) == 0:
-#             invalid_cate_img.append(image_name)
-#             continue
-#         else:
-#             cate_tag = cates_cn2en[cate_tagl[0]["label_name"]]
+        if len(cate_tagl) == 0:
+            invalid_cate_img.append(image_name)
+            continue
+        else:
+            cate_tag = cates_cn2en[cate_tagl[0]["label_name"]]
 
-#         cate_imgs[cate_tag] = image_name
+        cate_imgs[cate_tag] = image_name
 
-#     df_outfit_items.loc[len(df_outfit_items.index)] = [outfit_id] + list(cate_imgs.values())
+    df_outfit_items.loc[len(df_outfit_items.index)] = [outfit_id] + list(cate_imgs.values())
 
-#     # count += 1
-#     # if count >= 5:
-#     #     break
+    # count += 1
+    # if count >= 5:
+    #     break
 
-# # %%
-# df_outfit_items.fillna(-1, inplace=True)
-# df_outfit_items.head(5)
+# %%
+df_outfit_items.fillna(-1, inplace=True)
+df_outfit_items.head(5)
+
+# %%
+invalid_cate_img
 
 # # %%
 # to_csv("../data/theme_aware_outfit_items.csv", df_outfit_items)
@@ -155,6 +158,6 @@ img_subcate_dict = dict(zip(sample_outerwears.image_path, sample_outerwears.en_s
 
 img_paths = list(img_subcate_dict.keys())
 
-plot_multiple_images(img_paths, 4, 12, 16, 512, img_subcate_dict)
+display_multiple_images(img_paths, 4, 12, 16, 512, img_subcate_dict)
 
 # %%
