@@ -17,7 +17,7 @@ from PIL import Image
 import cv2
 
 sys.path += ["../"]
-from reproducible_code.tools import io, plot
+from reproducible_code.tools import io, plot, image_io
 importlib.reload(plot)
 
 sns.set_theme()
@@ -78,13 +78,15 @@ outfit_ids = list(outfit_descriptions.keys())
 # %% Display outfits with their descriptions
 n_outfits = len(outfit_ids)
 n_sample = 8
-outfit_ids = random.sample(outfit_ids, n_sample)
+# sample_outfit_ids = random.sample(outfit_ids, n_sample)
+sample_outfit_ids = ["5858"]
+new_sizes = (224, 224)
 
 sample_images = []
 sample_outfit_titles = []
 grey_images = []
 
-for outfit_id in outfit_ids:
+for outfit_id in sample_outfit_ids:
     item_images = []
     outfit_images = []
 
@@ -103,9 +105,17 @@ for outfit_id in outfit_ids:
         image_path = osp.join(outfit_dir, item_info["Image"])
 
         try:
-            image = np.array(Image.open(image_path))
+            # image = np.array(Image.open(image_path))
+            image = image_io.load_image(
+                image_path,
+                # toRGB=False
+            )
         except Exception:
             continue
+
+        if image is None:
+            continue
+        
         sizes = image.shape
     
         if len(sizes) == 3:
@@ -117,6 +127,7 @@ for outfit_id in outfit_ids:
             image = image[..., np.newaxis].repeat(3, -1)
             grey_images.append(image)
         
+        image = cv2.resize(image, new_sizes)
         item_images.append(image)
 
     item_images = np.vstack(item_images)
@@ -124,16 +135,18 @@ for outfit_id in outfit_ids:
 
     for outfit_image in outfit_meta["Outfit_Images"]:
         outfit_image_path = osp.join(outfit_dir, outfit_image)
-        outfit_image = np.array(Image.open(outfit_image_path))
+        outfit_image = image_io.load_image(
+            outfit_image_path,
+            # toRGB=False
+        )
+        # outfit_image = np.array(Image.open(outfit_image_path))
         outfit_images.append(outfit_image)
 
     outfit_images = np.vstack(outfit_images)
     oh, ow, _ = outfit_images.shape
 
     outfit_images = cv2.resize(outfit_images, (int(ih * ow/oh), ih))
-    print(item_images.shape, outfit_images.shape)
     combined_image = np.hstack((item_images, outfit_images))
-    print(combined_image.shape)
 
     sample_images.append(combined_image)
     sample_outfit_titles.append(outfit_text)
@@ -142,14 +155,20 @@ for outfit_id in outfit_ids:
 plot.display_multiple_images(
     sample_images,
     grid_nrows=1,
-    fig_size=24,
+    fig_size=12,
     titles=sample_outfit_titles,
     fontsize=10,
-    axes_pad=1.
+    axes_pad=2.,
+    line_length=8
 )
 
 # %%
-if len(image_2ds) > 0:
-    plt.imshow(np.hstack(image_2ds), cmap="gray")
+img_name = "12597/12597_12003_37184955938.jpg"
+img_name = "8935/8935_1356_30236405816.jpg"
+img_path = osp.join(outfits_dir, img_name)
+print(img_path)
+img = image_io.load_image(img_path)
+img = np.array(Image.open(img_path))
+img.shape
 
 # %%
