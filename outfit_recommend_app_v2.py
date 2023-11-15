@@ -18,8 +18,8 @@ metadata = load_json(metadata_file)
 
 n_cols = len(cates)
 n_outfits = 4
-show_desc = False
-visualize = False
+show_desc = True
+debug = True
 table_style = False
 
 name = lambda x: osp.basename(x).split(".")[0]
@@ -99,7 +99,7 @@ else:
 
                 image = Image.open(osp.join(image_dir, garm_path))
 
-                if cate == first_item_cate and visualize:
+                if cate == first_item_cate and debug:
                     image = ImageOps.expand(image, border=5, fill="yellow")
 
                 st.image(

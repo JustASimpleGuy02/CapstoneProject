@@ -1,5 +1,5 @@
+from glob import glob
 import os.path as osp
-import pickle
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -18,32 +18,19 @@ project_dir = "/home/dungmaster/Projects/Machine Learning"
 par_dir = osp.join(
     project_dir, "HangerAI_outfits_recommendation_system/CapstoneProject"
 )
-image_dir = "/home/dungmaster/Datasets/polyvore_outfits/images"
+image_dir = "/home/dungmaster/Datasets/Deep-Fashion/img"
 top_k = 20
 
-# TODO: change storage pkl file to more data, preferably full polyvore data
-hashes_file = osp.abspath(
-    osp.join(
-        project_dir,
-        "HangerAI_outfits_recommendation_system",
-        "storages",
-        "hanger_apparels_100.pkl",
-    )
-)
+embeddings_file = osp.join(par_dir, "model_embeddings", "deep_fashion.txt")
+image_embeddings = None
+save_embeddings = True
 
-embeddings_file = osp.join(par_dir, "model_embeddings", "polyvore_502.txt")
+if osp.exists(embeddings_file):
+    image_embeddings = np.loadtxt(embeddings_file)
+    save_embeddings = False
 
-
-def load_image_files(hfile):
-    pkl_file = open(hfile, "rb")
-    hashes_polyvore = pickle.load(pkl_file)[1]
-    image_names = list(hashes_polyvore.keys())
-    image_paths = [osp.join(image_dir, name) for name in image_names]
-    return image_paths
-
-
-image_paths = load_image_files(hashes_file)
-image_embeddings = np.loadtxt(embeddings_file)
+image_paths = glob(osp.join(image_dir, "*/*.jpg"))
+print("Number of images:", len(image_paths))
 
 ret = FashionRetrieval(
     image_paths=image_paths, image_embeddings=image_embeddings
@@ -58,7 +45,11 @@ class TextInput(BaseModel):
 @app.post("/fashion_retrieve")
 def retrieve_item(input_data: TextInput):
     processed_text = input_data.text.lower()
-    found_image_paths = ret.retrieve(query=processed_text)[:top_k]
+    found_image_paths, _ = ret.retrieve(
+        query=processed_text,
+        embeddings_file=embeddings_file,
+        save_embeddings=save_embeddings
+    )
 
     json_obj = {
         "garments_retrieved": [
