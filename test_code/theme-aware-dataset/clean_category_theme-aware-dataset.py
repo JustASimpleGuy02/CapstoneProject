@@ -146,6 +146,10 @@ subcates_cn2en
 # df_items.head(5)
 
 # %%
+df_outfits = io.load_csv("../../data/clean_theme_outfit_items_v1.csv")
+df_outfits.head()
+
+# %%
 path = "../../data/theme-aware_item_categories.csv"
 # io.to_csv(path, df_items)
 df_items = io.load_csv(path)
@@ -153,6 +157,15 @@ print(len(df_items))
 print("Number of items with no category:", sum(df_items["en_category"].isna()))
 print("Number of items with no subcategory:", sum(df_items["en_subcategory"].isna()))
 df_items.head()
+
+# %%
+df_items["en_subcategory"] = df_items["en_subcategory"].str.lower()
+df_items["en_category"] = df_items["en_category"].str.lower()
+df_items["image_path"] = df_items["image"].apply(
+    lambda x: osp.join(data_dir, "outfits", get_outfit(x), x)
+)
+print(df_items.loc[0].image_path)
+df_items.head(5)
 
 # %%
 subcates = list(set(df_items["en_subcategory"].tolist()))
@@ -180,11 +193,12 @@ outerwear_items.head()
 
 # %%
 sample_outerwears = outerwear_items.sample(16)
-img_subcate_dict = dict(zip(sample_outerwears.image_path, sample_outerwears.en_subcategory))
+# img_subcate_dict = dict(zip(sample_outerwears.image_path, sample_outerwears.en_subcategory))
 
-img_paths = list(img_subcate_dict.keys())
+img_paths = sample_outerwears.image_path.tolist()
+en_subcategories = sample_outerwears.en_subcategory.tolist()
 
-plot.display_multiple_images(img_paths, 4, 12, 16, 512, img_subcate_dict)
+plot.display_multiple_images(img_paths, 4, 12, 16, 512, en_subcategories)
 
 # %% Check skirt categories
 cate = "skirt suit"
@@ -195,6 +209,6 @@ chosen_cate_items.head()
 cate = "en_subcategory"
 # subcates_freq = chosen_cate_items[cate].value_counts().reset_index()
 # sns.barplot(subcates_freq, x=cate, y="index")
-plot.plot_attribute_frequency(chosen_cate_items, cate)
+plot.plot_attribute_frequency(chosen_cate_items, cate, 10, 30)
 
 # %%

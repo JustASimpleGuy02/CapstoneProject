@@ -8,7 +8,7 @@ import time
 import numpy as np
 import pandas as pd
 from fashion_clip.fashion_clip import FashionCLIP
-from tools import load_image, display_image_sets
+# from tools import load_image, display_image_sets
 
 get_filename = lambda x: osp.basename(x).split(".")[0]
 norm = lambda x: np.linalg.norm(x, ord=2, axis=-1, keepdims=True)
