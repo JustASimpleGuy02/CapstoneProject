@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 import os
 import os.path as osp
-from typing import List
+from typing import List, Any
 from glob import glob
 import time
 
@@ -32,23 +32,19 @@ class FashionRetrieval:
     def __init__(
         self,
         model=FashionCLIP("fashion-clip"),
-        image_paths: List[str] = None,
         image_embeddings: List[np.ndarray] = None,
-        n_sample: int = None,
+        text_embeddings: List[np.ndarray] = None,
     ):
         self.model = model
         self.image_embeddings = image_embeddings
-
-        if n_sample is None or n_sample > len(image_paths):
-            n_sample = len(image_paths)
-
-        self.image_paths = image_paths[:n_sample]
+        self.text_embeddings = text_embeddings
 
     def retrieve(
         self,
         query: str,
-        encode_images_func=None,
-        encode_text_func=None,
+        image_paths: List[str],
+        encode_images_func: Any = None,
+        encode_text_func: Any = None,
         embeddings_file: str = None,
         save_embeddings: bool = False,
         batch_size: int = 64,
@@ -56,14 +52,17 @@ class FashionRetrieval:
         """Search top images predicted by the model according to query
 
         Args:
-            model (Any): the pretrained model
             query (str): input query to search for fashion item
+            image_paths (List[str]): list of image paths to retrieve from
+            encode_images_func (Any): function to encode images
+            encode_text_func (Any): function to encode texts
             embeddings_file (str): absolute or relative path to image embeddings file
+            save_embeddings (bool): whether to save embeddings into a file
             batch_size (int): number of items in a batch to process
 
         Returns:
-            List[str]: list of result image paths
-            List[np.ndarray]: list of image embeddings for later use
+            List[str]: list of result image paths sorted by rank
+            np.ndarray: text embedding for later use
         """
         print("Embedding text...")
         text_embedding = (
@@ -76,7 +75,7 @@ class FashionRetrieval:
                 encode_images_func
                 if encode_images_func
                 else self.model.encode_images
-            )(self.image_paths, batch_size=batch_size)
+            )(image_paths, batch_size=batch_size)
             self.image_embeddings = image_embeddings / norm(image_embeddings)
 
             if embeddings_file is not None and save_embeddings:
@@ -89,79 +88,60 @@ class FashionRetrieval:
         )
         inds = cosine_sim.argsort()[:, ::-1]
         inds = inds.squeeze().tolist()
-        found_image_paths = [self.image_paths[ind] for ind in inds]
+        rank_image_paths = [image_paths[ind] for ind in inds]
 
-        return found_image_paths, text_embedding
+        return rank_image_paths, text_embedding
 
+    def classify(
+        self,
+        image: np.ndarray,
+        classes: List[str],
+        encode_image_func=None,
+        encode_texts_func=None,
+        embeddings_file: str = None,
+        save_embeddings: bool = False,
+        batch_size: int = 64,
+    ):
+        """Classify an image to the most matched text categories
 
-def search(
-    model,
-    encode_images,
-    encode_prompt,
-    prompt: str,
-    image_paths: List[str],
-    embeddings_file: str = None,
-    image_embeddings: List[np.ndarray] = None,
-    n_sample: int = None,
-    # top_k: int = 5,
-    save_embeddings: bool = False,
-    batch_size: int = 64,
-):
-    """Search top images predicted by the model according to prompt
+        Args:
+            image (np.ndarray): input image to classify
+            classes (List[str]): list of classes to match image to
+            encode_image_func (Any): function to encode images
+            encode_texts_func (Any): function to encode texts
+            embeddings_file (str): absolute or relative path to text embeddings file
+            save_embeddings (bool): whether to save embeddings into a file
+            batch_size (int): number of items in a batch to process
 
-    Args:
-        model (Any): the pretrained model
-        prompt (str): input prompt to search for fashion item
-        image_paths (List[str]): list of absolute paths to item images
-        embeddings_file (str): absolute or relative path to image embeddings file
-        image_embeddings (List[np.ndarray], optional): embedding vectors of all the images. Defaults to None.
-        top_k (int): number of best images to choose
-        n_sample (int): number of images to test if there are so many images
-        batch_size (int): number of items in a batch to process
+        Returns:
+            (str): text category sorted by ranks
+        """
+        image_embedding = (
+            encode_image_func if encode_image_func else self.model.encode_images
+        )([image], batch_size)[0]
+        image_embedding = image_embedding[np.newaxis, ...]
 
-    Returns:
-        List[str]: list of result image paths
-        List[np.ndarray]: list of image embeddings for later use
-    """
-    print("Embedding text...")
-    text_embedding = encode_prompt([prompt], batch_size)[0]
-    text_embedding = text_embedding[np.newaxis, ...]
+        if self.text_embeddings is None:
+            text_embeddings = (
+                encode_texts_func
+                if encode_texts_func
+                else self.model.encode_text
+            )(classes, batch_size=batch_size)
+            self.text_embeddings = text_embeddings / norm(text_embeddings)
 
-    if n_sample is None or n_sample > len(image_paths):
-        n_sample = len(image_paths)
+            if embeddings_file is not None and save_embeddings:
+                print("Save classes embeddings...")
+                np.savetxt(embeddings_file, self.text_embeddings)
 
-    if image_embeddings is None:
-        image_embeddings = encode_images(
-            image_paths[:n_sample], batch_size=batch_size
+        print("Find matching class...")
+        cosine_sim = self.model._cosine_similarity(
+            image_embedding, self.text_embeddings, normalize=True
         )
+        inds = cosine_sim.argsort()[:, ::-1]
+        inds = inds.squeeze().tolist()
+        rank_classes = [classes[ind] for ind in inds]
 
-        image_embeddings = image_embeddings / norm(image_embeddings)
-
-        if save_embeddings:
-            print("Save image embeddings...")
-            np.savetxt(embeddings_file, image_embeddings)
-
-    # Ver 1
-    # similarity = text_embedding.dot(image_embeddings.T)
-
-    # if len(similarity.shape) > 1:
-    #     similarity = np.squeeze(similarity)
-
-    # # Find most suitable image for the prompt
-    # matched_inds = np.argpartition(similarity, -top_k)[-top_k:]
-    # sorted_inds = matched_inds[np.argsort(similarity[matched_inds])][::-1]
-
-    # Ver 2
-    print("Find matching fashion items...")
-    # inds = model._nearest_neighbours(top_k, text_embedding, image_embeddings)
-    cosine_sim = model._cosine_similarity(
-        text_embedding, image_embeddings, normalize=True
-    )
-    inds = cosine_sim.argsort()[:, ::-1]
-    inds = inds.squeeze().tolist()
-    found_image_paths = [image_paths[ind] for ind in inds]
-
-    return found_image_paths
+        return rank_classes
 
 
 def parse_args():
