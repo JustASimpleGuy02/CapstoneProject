@@ -9,35 +9,27 @@ import re
 import cv2
 
 from reproducible_code.tools import image_io, io, plot
-# from apis import search_fclip
-# from fashion_clip.fashion_clip import FashionCLIP
 
-# importlib.reload(image_io)
-# importlib.reload(search_fclip)
+importlib.reload(image_io)
 
 # %%
 data_dir = "/home/dungmaster/Datasets/Deep-Fashion"
-# img_dir = osp.join(data_dir, "img")
-# img_paths = glob(osp.join(img_dir, "*/*.jpg"))
-# len(img_paths)
-
+list_imgs = io.load_txt(
+    osp.join(data_dir, "Anno_fine", "train.txt")
+)
+print(len(list_imgs))
+list_imgs
+    
 # %%
 list_bbox = io.load_txt(
-    osp.join(data_dir, "Anno_coarse", "list_bbox.txt")
-)[2:]
+    osp.join(data_dir, "Anno_fine", "train_bbox.txt")
+)
+print(len(list_bbox))
 list_bbox
 
 # %%
-list_img = [osp.join(data_dir, bbox.split()[0]) for bbox in list_bbox]
-list_bboxes = [bbox.split()[1:] for bbox in list_bbox]
-del list_bbox
-
-# %%
-print(len(list_img))
-print(len(list_bboxes))
-
-# %%
-list_img
+list_img = [osp.join(data_dir, ) for bbox in list_imgs]
+list_bboxes = [bbox.split()for bbox in list_bbox]
 
 # %%
 list_bboxes = list(map(
@@ -60,6 +52,6 @@ for ind in rand_inds:
     img = cv2.rectangle(img, tl, br, (255, 0, 0), 2)
     imgs.append(img)
 
-plot.display_multiple_images(imgs, 4, 24, num_sample, 512)
+plot.display_multiple_images(imgs, 4, 24, 512)
 
 # %%
