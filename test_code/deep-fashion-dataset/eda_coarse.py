@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 import numpy as np
 import cv2
+import pandas as pd
 import matplotlib.pyplot as plt
 
 from reproducible_code.tools import image_io, io, plot
@@ -24,7 +25,7 @@ data_dir = "/home/dungmaster/Datasets/Deep-Fashion"
 # img2attr = io.load_json(img2attr_json)
 # print(len(img2attr))
 
-# # %% [markdown]
+# # # %% [markdown]
 # # ## Category 
 # list_cate = io.load_txt(
 #     osp.join(data_dir, "Anno_coarse", "list_category_cloth.txt")    
@@ -44,12 +45,34 @@ data_dir = "/home/dungmaster/Datasets/Deep-Fashion"
 #     attr = img2attr[img]
 #     img2attr[img] = {"category": cate, "attributes": attr}
 
-# img2attr[img]
+# # %% [markdown]
+# ## Category 
+list_cate = io.load_txt(
+    osp.join(data_dir, "Anno_coarse", "list_category_cloth.txt")    
+)[2:]
+list_cates = [pair.split()[0] for pair in list_cate]
+list_cates
 
 # %%
-img2meta_json = "../../data/deep-fashion-dataset/img2meta.json"
-# io.save_json(img2attr, img2meta_json)
-img2meta = io.load_json(img2meta_json, verbose=True)
+img2cate = io.load_txt(
+    osp.join(data_dir, "Anno_coarse", "list_category_img.txt")    
+)[2:]
+all_cates = []
+
+for pair in tqdm(img2cate):
+    pair = pair.split()
+    img = pair[0]
+    cate = list_cates[int(pair[1])]
+    all_cates.append(cate)
+
+len(all_cates)
+all_cates
+
+# %%
+freqs = plot.plot_attribute_frequency(all_cates, "category", 10, 10, idx_ranges=[0, 10])
+
+# %%
+len(freqs)
 
 # # %% [markdown]
 # # ## Attributes
@@ -73,6 +96,40 @@ img2meta = io.load_json(img2meta_json, verbose=True)
 #     #     print(list_img)
 #     #     print(attrs)
 #     #     break
+
+# %% [markdown]
+# ## Attributes
+f = open(osp.join(data_dir, "Anno_coarse", "list_attr_cloth.txt"), 'r')
+attr_names = [' '.join(line.split()[:-1]) for line in f.readlines()[2:]]
+attr_names
+
+# %%
+f = open(osp.join(data_dir, "Anno_coarse", "list_attr_img.txt"), 'r')
+attr_freqs = {}
+
+for line in tqdm(f.readlines()[2:]):
+    temp = line.split()
+    img = temp[0]
+    attr_mask = temp[1:]
+    attrs = [i for i in range(len(attr_mask)) if attr_mask[i] == '1']
+    for attr in attrs:
+        attr_freqs[attr] = attr_freqs.get(attr, 0) + 1
+
+len(attr_freqs)
+
+# %%
+attr_counts = sorted(list(attr_freqs.values()))
+
+# %%
+plt.plot(attr_counts)
+plt.xlabel("attributes")
+plt.ylabel("count")
+
+# %%
+img2meta_json = "../../data/deep-fashion-dataset/img2meta.json"
+# io.save_json(img2attr, img2meta_json)
+img2meta = io.load_json(img2meta_json, verbose=True)
+img2meta
 
 # %% [markdown]
 # ## Bboxes
