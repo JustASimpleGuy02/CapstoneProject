@@ -35,6 +35,9 @@ known_colour_df = label_df[label_df["choice"] != "unknown"]
 len(known_colour_df)
 
 # %%
+plot.plot_attribute_frequency(label_df, "choice", 10, 10)
+
+# %%
 known_colour_df["image"].sample(1).values
 
 # %%
