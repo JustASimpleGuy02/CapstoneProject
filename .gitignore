@@ -1,0 +1,11 @@
+**/__pycache__
+*~
+*#
+checkpoints/
+data/
+model_embeddings/
+model_unofficial/
+note.yaml
+playground/
+lightning_logs/
+CLIP/
