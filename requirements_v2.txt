@@ -1,4 +1,4 @@
-fashion-clip
+fashion-clip==0.2.1
 matplotlib
 tqdm
 fastapi
@@ -21,3 +21,4 @@ onnxruntime
 optimum[exporters]
 ipykernel
 streamlit
+dill==0.3.7
