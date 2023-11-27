@@ -2,7 +2,7 @@
 
 ## Setup
 ```
-$ conda create -n fclip python=3.11
+$ conda create -n fclip python=3.10
 $ conda activate fclip
 $ pip install -r requirements.txt
 $ pip install dill==0.3.7 # to speedup
