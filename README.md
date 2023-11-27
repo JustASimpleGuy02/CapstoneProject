@@ -15,6 +15,7 @@ $ streamlit run outfit_recommend_app.py
 
 ## Reference
 
+```
 @Article{Chia2022,
     title="Contrastive language and vision learning of general fashion concepts",
     author="Chia, Patrick John
@@ -37,3 +38,4 @@ $ streamlit run outfit_recommend_app.py
     doi="10.1038/s41598-022-23052-9",
     url="https://doi.org/10.1038/s41598-022-23052-9"
 }
+```
