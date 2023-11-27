@@ -11,14 +11,15 @@ from tools import display_centered_text, load_json
 
 # Some hyperparams
 image_dir = "/home/dungmaster/Datasets/polyvore_outfits/images"
-cates = ["outerwear", "top", "bottom", "bag", "shoe"]
+# cates = ["outerwear", "full-body", "top", "bottom", "bag", "footwear", "accessory"]
+cates = ["top", "bottom", "bag", "outerwear", "shoe"]
 
 metadata_file = "/home/dungmaster/Datasets/polyvore_outfits/polyvore_item_metadata.json"
 metadata = load_json(metadata_file)
 
 n_cols = len(cates)
 n_outfits = 4
-show_desc = True
+show_desc = False
 debug = True
 table_style = False
 
