@@ -9,23 +9,24 @@ import streamlit as st
 from PIL import Image, ImageOps
 from reproducible_code.tools import display_centered_text, load_json
 
-# Some hyperparams
-image_dir = "/home/dungmaster/Datasets/polyvore_outfits/images"
+## Some hyperparams
+n_cols = len(cates)
+n_outfits = 4
+show_desc = True
+debug = True
+table_style = False
 # cates = ["outerwear", "full-body", "top", "bottom", "bag", "footwear", "accessory"]
 cates = ["top", "bottom", "bag", "outerwear", "shoe"]
 
+## Important paths and data
+image_dir = "/home/dungmaster/Datasets/polyvore_outfits/images"
 metadata_file = "/home/dungmaster/Datasets/polyvore_outfits/polyvore_item_metadata.json"
 metadata = load_json(metadata_file)
 
-n_cols = len(cates)
-n_outfits = 4
-show_desc = False
-debug = True
-table_style = False
-
 name = lambda x: osp.basename(x).split(".")[0]
 
-# Running the web app
+
+## Running the web app
 title = "Fashion Outfits Search App"
 st.set_page_config(page_title=title, layout="wide")
 st.header(title)
@@ -35,7 +36,7 @@ prompt = st.text_input("Search: ")
 if len(prompt) == 0:
     prompt = "skiing outfit for women"
 
-# Send request to outfit recommend api
+## Send request to outfit recommend api
 t1 = time.time()
 response = requests.post(
     url="http://127.0.0.1:3000/items/1/outfits_recommend_from_prompt/",
@@ -44,7 +45,7 @@ response = requests.post(
 t2 = time.time()
 print(f"Time: {(t2-t1):.3f}s")
 
-# Showcase api's reponse on web app
+## Showcase api's reponse on web app
 cols = st.columns(n_cols, )
 print(n_cols)
 
