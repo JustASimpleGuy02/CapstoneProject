@@ -9,20 +9,22 @@ import streamlit as st
 from PIL import Image, ImageOps
 from reproducible_code.tools import display_centered_text, load_json
 
+# cates = ["outerwear", "full-body", "top", "bottom", "bag", "footwear", "accessory"]
+cates = ["top", "bottom", "bag", "outerwear", "shoe"]
+
+
 ## Some hyperparams
 n_cols = len(cates)
 n_outfits = 4
-show_desc = True
+show_desc = False
 debug = True
 table_style = False
-# cates = ["outerwear", "full-body", "top", "bottom", "bag", "footwear", "accessory"]
-cates = ["top", "bottom", "bag", "outerwear", "shoe"]
+
 
 ## Important paths and data
 image_dir = "/home/dungmaster/Datasets/polyvore_outfits/images"
 metadata_file = "/home/dungmaster/Datasets/polyvore_outfits/polyvore_item_metadata.json"
 metadata = load_json(metadata_file)
-
 name = lambda x: osp.basename(x).split(".")[0]
 
 
