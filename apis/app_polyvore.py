@@ -26,7 +26,7 @@ item2cate_fpath = osp.join(data_dir, "item_cate_502.json")
 
 item_cate_map = json.load(open(item2cate_fpath, 'r'))
 top_k = 20
-search_category = "bag"
+search_category = "shoe"
 
 image_paths = [osp.join(image_dir, img_fn) for img_fn in item_cate_map[search_category]]
 embeddings_file = osp.join(par_dir, "model_embeddings", "polyvore", f"polyvore_{search_category}_502.txt")
