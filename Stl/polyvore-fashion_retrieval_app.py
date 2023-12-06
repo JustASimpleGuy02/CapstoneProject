@@ -24,8 +24,8 @@ st.header(title)
 
 # Input search query
 prompt = st.text_input("Search: ")
-# if len(prompt) == 0:
-#     prompt = "vacation outfit for men"
+if len(prompt) == 0:
+    prompt = "vacation outfit for men"
 
 # Send request to outfit recommend api
 response = requests.post(
