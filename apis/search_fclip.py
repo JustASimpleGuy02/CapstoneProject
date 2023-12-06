@@ -8,7 +8,7 @@ import time
 import numpy as np
 import pandas as pd
 from fashion_clip.fashion_clip import FashionCLIP
-# from tools import load_image, display_image_sets
+from tools import load_image, display_image_sets
 
 get_filename = lambda x: osp.basename(x).split(".")[0]
 norm = lambda x: np.linalg.norm(x, ord=2, axis=-1, keepdims=True)
@@ -69,6 +69,11 @@ class FashionRetrieval:
             encode_text_func if encode_text_func else self.model.encode_text
         )([query], batch_size)[0]
         text_embedding = text_embedding[np.newaxis, ...]
+
+        # if the input embedding file exist and user
+        # does not ask to save the embedding
+        if osp.exists(embeddings_file) and not save_embeddings:
+            self.image_embeddings = np.loadtxt(embeddings_file)
 
         if self.image_embeddings is None:
             image_embeddings = (
