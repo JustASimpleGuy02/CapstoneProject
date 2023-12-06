@@ -1,15 +1,17 @@
 import os.path as osp
-import pickle
+import json
 
 from fastapi import FastAPI
 from pydantic import BaseModel
 import uvicorn
 
 import numpy as np
+import pandas as pd
 from PIL import Image
 
-from .search_item_fashion_clip import FashionRetrieval
+from .search_fclip import FashionRetrieval
 from tools import image_to_base64
+from icecream import ic
 
 app = FastAPI()
 
@@ -18,35 +20,26 @@ project_dir = "/home/dungmaster/Projects/Machine Learning"
 par_dir = osp.join(
     project_dir, "HangerAI_outfits_recommendation_system/CapstoneProject"
 )
-image_dir = "/home/dungmaster/Datasets/polyvore_outfits/images"
+data_dir = "/home/dungmaster/Datasets/polyvore_outfits"
+image_dir = osp.join(data_dir, "sample_images")
+item2cate_fpath = osp.join(data_dir, "item_cate_502.json")
+
+item_cate_map = json.load(open(item2cate_fpath, 'r'))
 top_k = 20
+search_category = "bag"
 
-# TODO: change storage pkl file to more data, preferably full polyvore data
-hashes_file = osp.abspath(
-    osp.join(
-        project_dir,
-        "HangerAI_outfits_recommendation_system",
-        "storages",
-        "hanger_apparels_100.pkl",
-    )
-)
+image_paths = [osp.join(image_dir, img_fn) for img_fn in item_cate_map[search_category]]
+embeddings_file = osp.join(par_dir, "model_embeddings", "polyvore", f"polyvore_{search_category}_502.txt")
+save_embeddings = True
 
-embeddings_file = osp.join(par_dir, "model_embeddings", "polyvore_502.txt")
-
-
-def load_image_files(hfile):
-    pkl_file = open(hfile, "rb")
-    hashes_polyvore = pickle.load(pkl_file)[1]
-    image_names = list(hashes_polyvore.keys())
-    image_paths = [osp.join(image_dir, name) for name in image_names]
-    return image_paths
-
-
-image_paths = load_image_files(hashes_file)
-image_embeddings = np.loadtxt(embeddings_file)
+if osp.exists(embeddings_file):
+    image_embeddings = np.loadtxt(embeddings_file)
+    save_embeddings = False
+else:
+    image_embeddings = None
 
 ret = FashionRetrieval(
-    image_paths=image_paths, image_embeddings=image_embeddings
+    image_embeddings=image_embeddings
 )
 
 
@@ -58,7 +51,12 @@ class TextInput(BaseModel):
 @app.post("/fashion_retrieve")
 def retrieve_item(input_data: TextInput):
     processed_text = input_data.text.lower()
-    found_image_paths, _ = ret.retrieve(query=processed_text)
+    found_image_paths, _ = ret.retrieve(
+        image_paths=image_paths,
+        query=processed_text,
+        embeddings_file=embeddings_file,
+        save_embeddings=save_embeddings
+    )
 
     json_obj = {
         "garments_retrieved": [
