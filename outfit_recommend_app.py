@@ -17,7 +17,7 @@ cates = ["top", "bottom", "bag", "outerwear", "shoe"]
 n_cols = len(cates)
 n_outfits = 4
 show_desc = False
-debug = True
+debug = False
 table_style = False
 
 
@@ -36,7 +36,7 @@ st.header(title)
 # Input search query
 prompt = st.text_input("Search: ")
 if len(prompt) == 0:
-    prompt = "skiing outfit for women"
+    prompt = "wedding suit for men"
 
 ## Send request to outfit recommend api
 t1 = time.time()
