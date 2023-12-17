@@ -49,10 +49,8 @@ print(f"Time: {(t2-t1):.3f}s")
 
 ## Showcase api's reponse on web app
 cols = st.columns(n_cols, )
-print(n_cols)
 
 json_response = response.json()
-pprint(json_response)
 
 first_item_cates = json_response["first_item_cate"]
 outfit_recommends = json_response["outfit_recommend"]
@@ -77,7 +75,6 @@ else:
 
     for ind, outfit in enumerate(outfit_recommends):
         first_item_cate = first_item_cates[ind]
-        print(first_item_cate)
 
         for cate in cates:
             garm_path = outfit[cate]
