@@ -12,7 +12,7 @@ metadata_file = (
 )
 metadata = load_json(metadata_file)
 
-show_desc = True
+show_desc = False
 n_cols = 5
 
 name = lambda x: osp.basename(x).split(".")[0]
