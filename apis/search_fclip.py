@@ -36,18 +36,19 @@ class FashionRetrieval:
         text_embeddings: List[np.ndarray] = None,
     ):
         self.model = model
-        self.image_embeddings = image_embeddings
-        self.text_embeddings = text_embeddings
 
     def retrieve(
         self,
-        query: str,
         image_paths: List[str],
+        image_embeddings: np.ndarray = None,
+        text_embedding: np.ndarray = None,
+        query: str = None,
         encode_images_func: Any = None,
         encode_text_func: Any = None,
         embeddings_file: str = None,
         save_embeddings: bool = False,
         batch_size: int = 64,
+        verbose: bool = False
     ):
         """Search top images predicted by the model according to query
 
@@ -64,32 +65,34 @@ class FashionRetrieval:
             List[str]: list of result image paths sorted by rank
             np.ndarray: text embedding for later use
         """
-        print("Embedding text...")
-        text_embedding = (
-            encode_text_func if encode_text_func else self.model.encode_text
-        )([query], batch_size)[0]
-        text_embedding = text_embedding[np.newaxis, ...]
+        if text_embedding is None:
+            if verbose:
+                print("Embedding text...")
+            text_embedding = (
+                encode_text_func if encode_text_func else self.model.encode_text
+            )([query], batch_size)[0]
+            text_embedding = text_embedding[np.newaxis, ...]
 
-        # if the input embedding file exist and user
-        # does not ask to save the embedding
-        if osp.exists(embeddings_file) and not save_embeddings:
-            self.image_embeddings = np.loadtxt(embeddings_file)
+        if embeddings_file is not None :
+            image_embeddings = np.loadtxt(embeddings_file)
 
-        if self.image_embeddings is None:
+        if image_embeddings is None:
             image_embeddings = (
                 encode_images_func
                 if encode_images_func
                 else self.model.encode_images
             )(image_paths, batch_size=batch_size)
-            self.image_embeddings = image_embeddings / norm(image_embeddings)
 
             if embeddings_file is not None and save_embeddings:
                 print("Save image embeddings...")
-                np.savetxt(embeddings_file, self.image_embeddings)
+                np.savetxt(embeddings_file, image_embeddings)
 
-        print("Find matching fashion items...")
+        image_embeddings = image_embeddings / norm(image_embeddings)
+
+        if verbose:
+            print("Find matching fashion items...")
         cosine_sim = self.model._cosine_similarity(
-            text_embedding, self.image_embeddings, normalize=True
+            text_embedding, image_embeddings, normalize=True
         )
         inds = cosine_sim.argsort()[:, ::-1]
         inds = inds.squeeze().tolist()
