@@ -31,7 +31,7 @@ name = lambda x: osp.basename(x).split(".")[0]
 ## Running the web app
 title = "Fashion Outfits Search App"
 st.set_page_config(page_title=title, layout="wide")
-st.header(title)
+st.header(f":green[{title}]")
 
 # Input search query
 prompt = st.text_input("Search: ")
@@ -96,7 +96,7 @@ else:
 
             with col:
                 if ind_outfit == 0:
-                    st.header(cate)
+                    st.write(f":blue[**{cate}**]")
 
                 image = Image.open(osp.join(image_dir, garm_path))
 
