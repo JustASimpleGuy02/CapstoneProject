@@ -9,3 +9,5 @@ note.yaml
 playground/
 lightning_logs/
 CLIP/
+notes.yaml
+save_figs/
